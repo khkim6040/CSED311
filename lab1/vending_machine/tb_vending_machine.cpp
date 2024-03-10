@@ -64,7 +64,7 @@ int main(int argc, char** argv, char** env) {
     next_cycle(dut, m_trace);
     next_cycle(dut, m_trace);
     //////////////////////////////////////////////////////////////////////////////////
-    //reset_sim(dut, m_trace);
+    // reset_sim(dut, m_trace);
     printf("\n Select 2nd Item test\n");
     input_coin(dut, m_trace, 0b100);
     input_coin(dut, m_trace, 0b100);

@@ -54,7 +54,7 @@ module vending_machine (
 	// Variables. You may add more your own net variables.
 	wire [31:0] wait_time;
 	wire [31:0] wait_time_nxt;
-	wire time_return;
+	wire time_to_return; // wait_time이 0이 되었을 때 1이 되어 돈을 거슬러주기 시작하는 신호
 
 
 	// This module interface, structure, and given a number of modules are not mandatory but recommended.
@@ -69,7 +69,7 @@ module vending_machine (
 									.i_trigger_return(i_trigger_return),
 									.wait_time_nxt(wait_time_nxt),
 									.o_return_coin(o_return_coin),
-									.time_return(time_return));
+									.time_to_return(time_to_return));
 
 	calculate_current_state calculate_current_state_module(.i_input_coin(i_input_coin),
 										.o_return_coin(o_return_coin),
@@ -80,7 +80,7 @@ module vending_machine (
 										.current_total_nxt(current_total_nxt),
 										.o_available_item(o_available_item),
 										.o_output_item(o_output_item), 
-										.time_return(time_return),
+										.time_to_return(time_to_return),
 										.wait_time(wait_time));
 	
   	change_state change_state_module(

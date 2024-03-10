@@ -10,7 +10,7 @@ module change_state(clk,reset_n,wait_time_nxt,current_total_nxt,wait_time,curren
    output reg [31:0] wait_time;
    output reg [`kTotalBits-1:0] current_total;
    
-   // Sequential circuit to reset or update the states
+   // current_total과 wait_time을 업데이트하는 sequential circuit
    always @(posedge clk ) begin
       if (!reset_n) begin
          current_total <= 0;
@@ -19,7 +19,6 @@ module change_state(clk,reset_n,wait_time_nxt,current_total_nxt,wait_time,curren
       else begin
          current_total <= current_total_nxt;
          wait_time <= wait_time_nxt;
-         // TODO: update all states.
       end
    end
 endmodule 

@@ -66,7 +66,6 @@ void reset_sim(Vvending_machine* dut, VerilatedVcdC* m_trace) {
     next_cycle(dut, m_trace);
     dut->reset_n = 1;
     next_cycle(dut, m_trace);
-    printf("reset: %d, %d, %d\n", dut->o_available_item, dut->o_output_item, dut->o_return_coin);
 }
 
 void select_item(Vvending_machine* dut, VerilatedVcdC* m_trace, int item) {
@@ -97,14 +96,22 @@ void Wait_10cycle(Vvending_machine* dut, VerilatedVcdC* m_trace) {
 void ReturnTest(int current, Vvending_machine* dut, VerilatedVcdC* m_trace) {
     test_num++;
     int total_current = current;
-    uint8_t return_coin[3];
     while (current > 0) {
-        return_coin[0] = dut->o_return_coin & 1;
-        return_coin[1] = (dut->o_return_coin >> 1) & 1;
-        return_coin[2] = (dut->o_return_coin >> 2) & 1;
-        if (return_coin[0]) current = current - 100;
-        if (return_coin[1]) current = current - 500;
-        if (return_coin[2]) current = current - 1000;
+        if (dut->o_return_coin == 0b101) {
+            current = current - 1100;
+            printf("current %d \n", current);
+        } else if (dut->o_return_coin == 0b011) {
+            current = current - 600;
+            printf("current %d \n", current);
+        } else if (dut->o_return_coin == 0b001) {
+            current = current - 100;
+            printf("current %d \n", current);
+        } else if (dut->o_return_coin == 0b111) {
+            current = current - 1600;
+            printf("current %d \n", current);
+        } else {
+            printf("current %d \n", current);
+        }
         next_cycle(dut, m_trace);
     }
 
