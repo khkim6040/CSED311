@@ -19,8 +19,8 @@ always @(*) begin
     case (FuncCode)
         `FUNC_ADD: result = A + B;
         `FUNC_SUB: result = A - B;
-        `FUNC_ID: result = A; // Identity
-        `FUNC_NOT: result = ~A; // Bitwise NOT
+        `FUNC_ID: result = A; 
+        `FUNC_NOT: result = ~A;
         `FUNC_AND: result = A & B;
         `FUNC_OR: result = A | B;
         `FUNC_NAND: result = ~(A & B);
