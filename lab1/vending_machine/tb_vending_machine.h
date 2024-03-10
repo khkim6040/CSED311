@@ -98,19 +98,14 @@ void ReturnTest(int current, Vvending_machine* dut, VerilatedVcdC* m_trace) {
     test_num++;
     int total_current = current;
     uint8_t return_coin[3];
-    int i = 0;
-    while (current > 0 && i < 30) {
-        printf("current: %d\n", current);   
+    while (current > 0) {
         return_coin[0] = dut->o_return_coin & 1;
         return_coin[1] = (dut->o_return_coin >> 1) & 1;
         return_coin[2] = (dut->o_return_coin >> 2) & 1;
         if (return_coin[0]) current = current - 100;
         if (return_coin[1]) current = current - 500;
         if (return_coin[2]) current = current - 1000;
-        printf("return coin: %d, %d, %d, remain: %d\n", return_coin[2], return_coin[1], return_coin[0], current);
         next_cycle(dut, m_trace);
-        i++;
-
     }
 
     if (current == 0) {

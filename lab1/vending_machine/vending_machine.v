@@ -65,7 +65,7 @@ module vending_machine (
 									.coin_value(coin_value),
 									.current_total(current_total),
 									.wait_time(wait_time),
-									// .o_available_item(o_available_item),
+									.o_available_item(o_available_item),
 									.i_trigger_return(i_trigger_return),
 									.wait_time_nxt(wait_time_nxt),
 									.o_return_coin(o_return_coin),
