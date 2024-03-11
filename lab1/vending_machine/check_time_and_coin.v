@@ -22,22 +22,12 @@ i_input_coin,wait_time,i_select_item,o_return_coin,wait_time_nxt,time_to_return)
     initial begin
         wait_time_nxt = `kWaitTime + 1;
     end
-
-    always @(i_trigger_return) begin
-        if(i_trigger_return == 1) begin
-            wait_time_nxt = `kTriggerWaitCycle;
-        end
-        // 만약 i_trigger_return을 1로 세팅한 후 3 clock이 지나기 전에 다시 0으로 세팅한다면 wait_time을 초기화 
-        else begin
-            wait_time_nxt = `kWaitTime + 1;
-        end
-    end
     
     // wait_time_nxt를 계산하는 combinational circuit
     always @(*) begin
         if(time_to_return == 0) begin
             if(i_input_coin > 0) begin
-                // 돈을 넣었다면 wait_time을 초기화하
+                // 돈을 넣었다면 wait_time을 초기화
                 wait_time_nxt = `kWaitTime + 1;
             end
             else if(i_select_item > 0) begin
@@ -67,7 +57,6 @@ i_input_coin,wait_time,i_select_item,o_return_coin,wait_time_nxt,time_to_return)
         end
     end
 
-
     // 큰 단위부터 current total에 대해 동전 반환.
     // 1600원 있다하면 1000원짜리 1개, 500원짜리 1개, 100원짜리 1개 반환. => o_return_coin = 3'b111
     always @(*) begin
@@ -81,6 +70,16 @@ i_input_coin,wait_time,i_select_item,o_return_coin,wait_time_nxt,time_to_return)
                     tmp = tmp + coin_value[i];
                 end
             end
+        end
+    end
+
+    always @(i_trigger_return) begin
+        if(i_trigger_return == 1) begin
+            wait_time_nxt = `kTriggerWaitCycle;
+        end
+        // 만약 i_trigger_return을 1로 세팅한 후 3 clock이 지나기 전에 다시 0으로 세팅한다면 wait_time을 초기화 
+        else begin
+            wait_time_nxt = `kWaitTime + 1;
         end
     end
 
