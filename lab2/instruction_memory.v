@@ -33,7 +33,7 @@ module instruction_memory #(parameter MEM_DEPTH = 1024) (input reset,
         // DO NOT TOUCH COMMENT ABOVE
 
       // Provide path of the file including instructions with binary format
-      $readmemh("student_tb/non-controlflow_mem.txt", mem); // 텍스트 파일의 경로를 넣어주면 알아서 mem에 값을 넣고 초기화해줌
+      $readmemh("student_tb/loop_mem.txt", mem); // 텍스트 파일의 경로를 넣어주면 알아서 mem에 값을 넣고 초기화해줌
     end
     else begin
       i  = 0;

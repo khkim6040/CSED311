@@ -24,7 +24,7 @@ module register_file(input	reset,
   // Read_regi2 : 20~24 rs2
   // Write_regi : 7~11 rd
   always @(posedge clk)begin
-    if(write_enable == 1) begin
+    if(write_enable == 1 && reset == 0) begin
       rf[rd] <= rd_din;
     end
     else
