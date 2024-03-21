@@ -32,13 +32,8 @@ VL_INLINE_OPT void Vtop___024root___nba_sequent__TOP__0(Vtop___024root* vlSelf) 
     // Body
     __Vdlyvset__top__DOT__cpu__DOT__dmem__DOT__mem__v0 = 0U;
     __Vdlyvset__top__DOT__cpu__DOT__reg_file__DOT__rf__v0 = 0U;
-    vlSelf->top__DOT__cpu__DOT__reg_file__DOT__i = 
-        ((IData)(vlSelf->reset) ? 0x20U : 0U);
-    if ((1U & (~ ((IData)(vlSelf->top__DOT__cpu__DOT__write_enable) 
-                  & (~ (IData)(vlSelf->reset)))))) {
-        vlSelf->top__DOT__cpu__DOT__reg_file__DOT__i = 0U;
-    }
     if (vlSelf->reset) {
+        vlSelf->top__DOT__cpu__DOT__reg_file__DOT__i = 0x20U;
         vlSelf->top__DOT__cpu__DOT__dmem__DOT__i = 0U;
         while (VL_GTS_III(32, 0x4000U, vlSelf->top__DOT__cpu__DOT__dmem__DOT__i)) {
             vlSelf->top__DOT__cpu__DOT__dmem__DOT__mem[(0x3fffU 
@@ -47,6 +42,7 @@ VL_INLINE_OPT void Vtop___024root___nba_sequent__TOP__0(Vtop___024root* vlSelf) 
                 = ((IData)(1U) + vlSelf->top__DOT__cpu__DOT__dmem__DOT__i);
         }
     } else {
+        vlSelf->top__DOT__cpu__DOT__reg_file__DOT__i = 0U;
         vlSelf->top__DOT__cpu__DOT__dmem__DOT__i = 0U;
     }
     if ((0x23U != (0x7fU & vlSelf->top__DOT__cpu__DOT__dout))) {
@@ -72,6 +68,12 @@ VL_INLINE_OPT void Vtop___024root___nba_sequent__TOP__0(Vtop___024root* vlSelf) 
     } else {
         vlSelf->top__DOT__cpu__DOT__imem__DOT__i = 0U;
     }
+    if ((1U & (~ (((IData)(vlSelf->top__DOT__cpu__DOT__write_enable) 
+                   & (~ (IData)(vlSelf->reset))) & 
+                  (0U != (0x1fU & (vlSelf->top__DOT__cpu__DOT__dout 
+                                   >> 7U))))))) {
+        vlSelf->top__DOT__cpu__DOT__reg_file__DOT__i = 0U;
+    }
     if ((0x23U == (0x7fU & vlSelf->top__DOT__cpu__DOT__dout))) {
         __Vdlyvval__top__DOT__cpu__DOT__dmem__DOT__mem__v0 
             = vlSelf->top__DOT__cpu__DOT__rs2_dout;
@@ -80,8 +82,10 @@ VL_INLINE_OPT void Vtop___024root___nba_sequent__TOP__0(Vtop___024root* vlSelf) 
             = (0x3fffU & (vlSelf->top__DOT__cpu__DOT__alu_result 
                           >> 2U));
     }
-    if (((IData)(vlSelf->top__DOT__cpu__DOT__write_enable) 
-         & (~ (IData)(vlSelf->reset)))) {
+    if ((((IData)(vlSelf->top__DOT__cpu__DOT__write_enable) 
+          & (~ (IData)(vlSelf->reset))) & (0U != (0x1fU 
+                                                  & (vlSelf->top__DOT__cpu__DOT__dout 
+                                                     >> 7U))))) {
         __Vdlyvval__top__DOT__cpu__DOT__reg_file__DOT__rf__v0 
             = (((0x6fU == (0x7fU & vlSelf->top__DOT__cpu__DOT__dout)) 
                 | (0x67U == (0x7fU & vlSelf->top__DOT__cpu__DOT__dout)))
