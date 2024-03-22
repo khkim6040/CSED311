@@ -1,2 +1,5 @@
 *.pdf
 *.zip
+obj_dir/
+.stamp.*
+waveform.vcd
