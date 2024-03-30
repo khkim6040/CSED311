@@ -1,3 +1,5 @@
+`include "opcodes.v"
+
 module ALU (
     input [1:0] alu_op,
     input [31:0] alu_in_1,
@@ -7,6 +9,9 @@ module ALU (
 );
 
     // TODO: Implement ALU operations
+    always @(*) begin
+        
+    end
 
 
 endmodule

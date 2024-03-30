@@ -39,3 +39,9 @@
 // FUNCT7
 `define FUNCT7_SUB      7'b0100000
 `define FUNCT7_OTHERS   7'b0000000
+
+
+// ALUOp
+`define ALU_ADD         2'b00
+`define ALU_SUB         2'b01
+`define ALU_OTHERS      2'b10

@@ -12,7 +12,7 @@ module cpu(input reset,       // positive reset signal
            input clk,         // clock signal
            output is_halted,
            output [31:0]print_reg[0:31]
-           ); // Whehther to finish simulation
+           ); // Whether to finish simulation
   /***** Wire declarations *****/
 
   /***** Register declarations *****/
@@ -22,7 +22,7 @@ module cpu(input reset,       // positive reset signal
   reg [31:0] B; // Read 2 data register
   reg [31:0] ALUOut; // ALU output register
   // Do not modify and use registers declared above.
-
+  
 
   
 

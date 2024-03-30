@@ -1,3 +1,5 @@
+`include "opcodes.v"
+
 module ALUControlUnit (
     input funct7,
     input[3:0] funct3,
@@ -6,6 +8,8 @@ module ALUControlUnit (
 );
 
     // TODO: Generate ALU control signal
-    
+    always @(*) begin 
+        
+    end
 
 endmodule
