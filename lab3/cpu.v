@@ -22,11 +22,45 @@ module cpu(input reset,       // positive reset signal
   reg [31:0] B; // Read 2 data register
   reg [31:0] ALUOut; // ALU output register
   // Do not modify and use registers declared above.
+
+
   
 
+  2mux mem_src_mux(
+    .x1(),        // input
+    .x2(),        // input
+    .swch(),         // input
+    .out()          // output
+  );
+
+  2mux alu_src1_mux(
+    .x1(),        // input
+    .x2(),        // input
+    .swch(),         // input
+    .out()          // output
+  );
+
+  2mux alu_src2_mux(
+    .x1(),        // input
+    .x2(),        // input
+    .swch(),         // input
+    .out()          // output
+  );
+
+  2mux reg_write_mux(
+    .x1(),        // input
+    .x2(),        // input
+    .swch(),         // input
+    .out()          // output
+  );
+
+  2mux pc_src_mux(
+    .x1(),        // input
+    .x2(),        // input
+    .swch(),         // input
+    .out()          // output
+  );
   
-
-
   // ---------- Update program counter ----------
   // PC must be updated on the rising edge (positive edge) of the clock.
   PC pc(
