@@ -80,7 +80,9 @@ module cpu(input reset,       // positive reset signal
 
   // ---------- ALU Control Unit ----------
   ALUControlUnit alu_ctrl_unit(
-    .part_of_inst(),  // input
+    .funct7(),  // input
+    .funct3(),  // input
+    .ALUOp(),   // input
     .alu_op()         // output
   );
 
