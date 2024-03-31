@@ -4,6 +4,7 @@
 module ControlUnit (input reset,
                     input clk,
                     input [6:0] part_of_inst,
+                    input bcond,
                     output ALUSrcA,
                     output [1:0] ALUSrcB,
                     output IorD,
@@ -42,22 +43,73 @@ module ControlUnit (input reset,
         ALUSrcAWrite = 0;
         ALUSrcBWrite = 0;
         ALUOutWrite = 0;
+        ALUOp = part_of_inst;
         is_ecall = 0;
 
         case (state) begin
             `IF_4: begin
                 MemRead = 1;
                 IRWrite = 1;
+                ALUOutWrite = 1;
             end
             `ID: begin
                 ALUSrcAWrite = 1;
                 ALUSrcBWrite = 1;
-                ALUOutWrite = 1;
+            end
+            `EX_1: begin
+                if (opcodes == `BRANCH) begin
+                    PCWriteCond = 1;
+                    ALUSrcA = 1;
+                    ALUSrcB = 0;
+                    PCSource = 1;
+                end
+                else begin
+                    PCWrite = 0;
+                end
             end
             `EX_2: begin
-                ALUOutWrite = 1;
+                if (opcodes == `ARITHMETIC) begin
+                    ALUOutWrite = 1;
+                    ALUSrcA = 1;
+                    ALUSrcB = 0;
+                    ALUOp = `ALU_OTHERS;
+                end
+                else if (opcodes == `ARITHMETIC_IMM) begin
+                    ALUOutWrite = 1;
+                    ALUSrcA = 1;
+                    ALUSrcB = 2;
+                    ALUOp = `ALU_OTHERS;
+                end
+                else if (opcodes == `LOAD | opcodes == `STORE) begin
+                    ALUOutWrite = 1;
+                    ALUSrcA = 1;
+                    ALUSrcB = 2;
+                    ALUOp = `ALU_ADD;
+                end
+                else if (opcodes == `JAL) begin
+                    ALUSrcA = 0;
+                    ALUSrcB = 2;
+                    ALUOp = ALU_ADD;
+                end
+                else if (opcodes == `JALR) begin
+                    ALUSrcA = 1;
+                    ALUSrcB = 2;
+                    ALUOp = ALU_ADD;
+                end
+                else if (opcodes == `BRANCH) begin
+                    PCWrite = 1;
+                    ALUSrcA = 0;
+                    ALUSrcB = 2;
+                    ALUOp = ALU_SUB;
+                end
             end
             `MEM_4: begin
+                IorD = 1;
+                if (opcodes == `LOAD) begin
+                    
+                end
+                else begin
+                end
             end
             `WB: begin
             end
@@ -69,11 +121,6 @@ module ControlUnit (input reset,
 
     end
 
-    // TODO: Assign Control signals
-    always @(*) begin 
-        
-    end
-
     // TODO: Calculate next state
     always @(*) begin 
         case (state) begin
@@ -82,7 +129,7 @@ module ControlUnit (input reset,
             `IF_3: next_state = `IF_4;
             `IF_4: next_state = opcodes == `JAL ? `EX_1 : `ID;
             `ID: next_state = `EX_1;
-            `EX_1: next_state = `EX_2;
+            `EX_1: next_state = opcodes == `BRANCH & bcond == 0 ? `IF_1 : `EX_2;
             `EX_2: begin
                 if (opcodes == `BRANCH) 
                     next_state = `IF_1;
