@@ -23,7 +23,7 @@ module cpu(input reset,       // positive reset signal
   wire [31:0] mem_dout;
   wire [31:0] imm_gen_out;
   wire [31:0] alu_out;
-  wire [31:0] alu_ctrl_out;
+  wire [3:0] alu_ctrl_out;
   wire [31:0] rs1_dout;
   wire [31:0] rs2_dout;
 
@@ -46,6 +46,7 @@ module cpu(input reset,       // positive reset signal
   wire [4:0] reg_rs1;
   wire [4:0] reg_rs2;
   wire [4:0] reg_rd;
+  wire is_ecall;
 
   wire [6:0] funct7;
   wire [2:0] funct3;
@@ -134,6 +135,8 @@ module cpu(input reset,       // positive reset signal
     .rd(reg_rd),           // input
     .rd_din(reg_write_mux_out),       // input
     .write_enable(write_enable),    // input
+    .is_ecall(is_ecall),      // input
+    .is_halted(is_halted),      // output
     .rs1_dout(rs1_dout),     // output
     .rs2_dout(rs2_dout),      // output
     .print_reg(print_reg)     // output (TO PRINT REGISTER VALUES IN TESTBENCH)
@@ -171,7 +174,7 @@ module cpu(input reset,       // positive reset signal
     .ALUSrcBWrite(B_write),     // output
     .ALUOutWrite(ALUOut_write),   // output
     .ALUOp(alu_op),        // output
-    .is_ecall(is_halted)      // output
+    .is_ecall(is_ecall)      // output
   );
 
   // ---------- Immediate Generator ----------
