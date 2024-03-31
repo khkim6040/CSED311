@@ -1,4 +1,4 @@
-module 2mux (input [31:0] x0,
+module Mux_2_to_1 (input [31:0] x0,
         input [31:0] x1,
         input swch, 
         output reg [31:0] out);

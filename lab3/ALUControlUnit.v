@@ -2,7 +2,7 @@
 
 module ALUControlUnit (
     input[6:0] funct7,
-    input[3:0] funct3,
+    input[2:0] funct3,
     input[1:0] ALUOp,
     output reg [3:0] alu_ctrl_out
 );
@@ -17,7 +17,7 @@ module ALUControlUnit (
             end
             `ALU_CTRL_ARITH: begin
                case(funct3)
-                    `F3_ADD: begin 
+                    `FUNCT3_ADD: begin 
                         if(funct7 == `FUNCT7_SUB) begin
                             alu_ctrl_out = `ALU_SUB;
                         end
@@ -40,6 +40,9 @@ module ALUControlUnit (
                     `FUNCT3_AND: begin
                         alu_ctrl_out = `ALU_AND;
                     end
+                    default begin
+                        alu_ctrl_out = 4'b0; // Undefined
+                    end
                endcase 
             end
             `ALU_CTRL_IMME: begin
@@ -61,6 +64,9 @@ module ALUControlUnit (
                     end
                     `FUNCT3_SRL: begin
                         alu_ctrl_out = `ALU_SRL;
+                    end
+                    default begin
+                        alu_ctrl_out = 4'b0; // Undefined
                     end
                 endcase
             end

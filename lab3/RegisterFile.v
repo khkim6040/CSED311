@@ -4,17 +4,16 @@ module RegisterFile(input	reset,
                     input [4:0] rs2,          // source register 2
                     input [4:0] rd,           // destination register
                     input [31:0] rd_din,      // input data for rd
+                    input is_ecall,           // ecall signal
                     input write_enable,       // RegWrite signal
-                    output [31:0] rs1_dout,   // output of rs 1
-                    output [31:0] rs2_dout,
-                    output [31:0] print_reg[0:31]);  // output of rs 2
+                    output reg is_halted,         // halt signal 
+                    output reg [31:0] rs1_dout,   // output reg of rs 1
+                    output reg [31:0] rs2_dout,
+                    output reg [31:0] print_reg[0:31]);  // output of rs 2
   integer i;
   // Register file
   reg [31:0] rf[0:31];
   assign print_reg = rf;
-  // Asynchronously read register file
-  assign rs1_dout = rf[rs1];
-  assign rs2_dout = rf[rs2];
 
   always @(posedge clk) begin
     // Initialize register file (do not touch)
@@ -23,11 +22,23 @@ module RegisterFile(input	reset,
         rf[i] <= 32'b0;
       rf[2] <= 32'h2ffc; // stack pointer
     end
-
     // Synchronously write data to the register
     else begin
       if (write_enable && rd != 0)
         rf[rd] <= rd_din;
     end
   end
+
+  always @(*) begin
+    // Asynchronously read register file
+    rs1_dout = rf[rs1];
+    rs2_dout = rf[rs2];
+    if (is_ecall == 1 && rf[17] == 10) begin
+      is_halted = 1;
+    end
+    else begin
+      is_halted = 0;
+    end
+  end
+
 endmodule

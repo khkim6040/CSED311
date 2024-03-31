@@ -40,7 +40,7 @@ module cpu(input reset,       // positive reset signal
   wire pc_source;
   wire [1:0] alu_op;
   wire alu_srcA;
-  wire [2:0] alu_srcB;
+  wire [1:0] alu_srcB;
   wire reg_write;
   wire [6:0] opcode;
   wire [4:0] reg_rs1;
@@ -79,21 +79,21 @@ module cpu(input reset,       // positive reset signal
 
   
 
-  2mux mem_src_mux(
+  Mux_2_to_1 mem_src_mux(
     .x0(PC_out),        // input
     .x1(ALUOut_out),        // input
     .swch(i_or_d),         // input
     .out(mem_src_mux_out)          // output
   );
 
-  2mux alu_src1_mux(
+  Mux_2_to_1 alu_src1_mux(
     .x0(PC_out),        // input
     .x1(A_out),        // input
     .swch(alu_srcA),         // input
     .out(alu_src1_mux_out)          // output
   );
 
-  4mux alu_src2_mux(
+  Mux_4_to_1 alu_src2_mux(
     .x0(B_out),        // input
     .x1(4),        // input
     .x2(imm_gen_out),        // input
@@ -102,14 +102,14 @@ module cpu(input reset,       // positive reset signal
     .out(alu_src2_mux_out)          // output
   );
 
-  2mux reg_write_mux(
+  Mux_2_to_1 reg_write_mux(
     .x0(ALUOut_out),        // input
     .x1(MDR_out),        // input
     .swch(mem_to_reg),         // input
     .out(reg_write_mux_out)          // output
   );
 
-  2mux pc_src_mux(
+  Mux_2_to_1 pc_src_mux(
     .x0(alu_out),        // input
     .x1(ALUOut_out),        // input
     .swch(pc_source),         // input
@@ -122,7 +122,7 @@ module cpu(input reset,       // positive reset signal
     .reset(reset),       // input (Use reset to initialize PC. Initial value must be 0)
     .clk(clk),         // input
     .next_pc(next_pc),     // input
-    .pc_write_signal(PCWrite || (pc_write_cond && !alu_bcond)),    // input
+    .pc_write_signal(pc_write || (pc_write_cond && !alu_bcond)),    // input
     .current_pc(PC_out)   // output
   );
 
@@ -134,7 +134,7 @@ module cpu(input reset,       // positive reset signal
     .rs2(reg_rs2),          // input
     .rd(reg_rd),           // input
     .rd_din(reg_write_mux_out),       // input
-    .write_enable(write_enable),    // input
+    .write_enable(reg_write),    // input
     .is_ecall(is_ecall),      // input
     .is_halted(is_halted),      // output
     .rs1_dout(rs1_dout),     // output
@@ -157,7 +157,8 @@ module cpu(input reset,       // positive reset signal
   ControlUnit ctrl_unit(
     .reset(reset),        // input
     .clk(clk),          // input
-    .part_of_inst(opcode),    // input
+    .opcode(opcode),    // input
+    .bcond(alu_bcond),      // input
     .ALUSrcA(alu_srcA),       // output
     .ALUSrcB(alu_srcB),       // output
     .IorD(i_or_d),        // output
@@ -208,7 +209,7 @@ module cpu(input reset,       // positive reset signal
 
   TempRegister MDR(
     .in(mem_dout),  // input
-    .able(MDR_wire),  // input
+    .able(MDR_write),  // input
     .out(MDR_out)  // output
   );
   
