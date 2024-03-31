@@ -19,6 +19,7 @@ module ControlUnit (input reset,
                     output ALUSrcAWrite,
                     output ALUSrcBWrite,
                     output ALUOutWrite,
+                    output [2:0] ALUOp,
                     output is_ecall);
 
 

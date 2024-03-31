@@ -4,16 +4,11 @@ module TempRegister (input [31:0] in
                     
     reg [31:0] temp = 32`b0;
 
-    always (*) begin
-        if (able == 1)
-            out = in;
-        else
-            out = temp; 
-    end
 
     always (posedge able) begin
-        temp <= out;
+        temp <= in;
     end
 
+    assign out = temp;
 
 endmodule
