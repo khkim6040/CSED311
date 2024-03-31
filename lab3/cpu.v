@@ -119,6 +119,7 @@ module cpu(input reset,       // positive reset signal
     .reset(reset),       // input (Use reset to initialize PC. Initial value must be 0)
     .clk(clk),         // input
     .next_pc(next_pc),     // input
+    .pc_write_signal(PCWrite || (pc_write_cond && !alu_bcond)),    // input
     .current_pc(PC_out)   // output
   );
 

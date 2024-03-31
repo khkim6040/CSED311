@@ -65,6 +65,7 @@ module ControlUnit (input reset,
             end
         
         end
+        endcase
 
     end
 
@@ -99,6 +100,7 @@ module ControlUnit (input reset,
             end
         
         end
+        endcase
     end
 
     // TODO: Update state synchronously
