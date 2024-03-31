@@ -38,7 +38,7 @@ module cpu(input reset,       // positive reset signal
   wire mem_to_reg;
   wire IR_write;
   wire pc_source;
-  wire [2:0] alu_op;
+  wire [1:0] alu_op;
   wire alu_srcA;
   wire [2:0] alu_srcB;
   wire reg_write;
