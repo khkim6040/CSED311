@@ -72,7 +72,9 @@ module cpu(input reset,       // positive reset signal
   // // reg [31:0] ALUOut; // ALU output register
   // reg [31:0] PC; // Program counter register
   
-
+  assign reg_rs1 = IR_out[19:15];
+  assign reg_rs2 = IR_out[24:20];
+  assign reg_rd = IR_out[11:7]; 
 
   
 
@@ -199,27 +201,30 @@ module cpu(input reset,       // positive reset signal
     .in(mem_dout),  // input
     .able(IR_write),  // input
     .out(IR_out)  // output
-  )
+  );
 
-    TempRegister MDR(
+  TempRegister MDR(
     .in(mem_dout),  // input
     .able(MDR_wire),  // input
     .out(MDR_out)  // output
-  )
-    TempRegister A(
+  );
+  
+  TempRegister A(
     .in(rs1_dout),  // input
     .able(A_write),  // input
     .out(A_out)  // output
-  )
-    TempRegister B(
+  );
+  
+  TempRegister B(
     .in(rs2_dout),  // input
     .able(B_write),  // input
     .out(B_out)  // output
-  )
-    TempRegister ALUOut(
+  );
+  
+  TempRegister ALUOut(
     .in(alu_out),  // input
     .able(ALUOut_write),  // input
     .out(ALUOut_out)  // output
-  )
+  );
 
 endmodule

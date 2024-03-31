@@ -4,7 +4,7 @@ module Memory #(parameter MEM_DEPTH = 16384) (input reset,
                                               input [31:0] din,     // data to be written
                                               input mem_read,       // is read signal driven?
                                               input mem_write,      // is write signal driven?
-                                              output [31:0] mem_dout);  // output of the data memory at addr
+                                              output reg [31:0] mem_dout);  // output of the data memory at addr
   integer i;
   // Memory
   reg [31:0] mem[0: MEM_DEPTH - 1];
