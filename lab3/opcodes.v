@@ -42,6 +42,21 @@
 
 
 // ALUOp
-`define ALU_ADD         2'b00
-`define ALU_SUB         2'b01
-`define ALU_OTHERS      2'b10
+`define ALU_ADD         2'b00 // JAL, JALR, LW, SW
+`define ALU_SUB         2'b01 // BEQ, BNE, BLT, BGE
+`define ALU_OTHERS      2'b10 // R-type, I-type, depending on FUNCT3, FUNCT7
+`define ALU_ECALL       2'b11 // ECALL
+
+// ALU control signals
+`define ALU_CTRL_ADD    4'b0001
+`define ALU_CTRL_SUB    4'b0010
+`define ALU_CTRL_SLL    4'b0011
+`define ALU_CTRL_XOR    4'b0100
+`define ALU_CTRL_SRL    4'b0101
+`define ALU_CTRL_OR     4'b0110
+`define ALU_CTRL_AND    4'b0111
+`define ALU_CTRL_BEQ    4'b1000
+`define ALU_CTRL_BNE    4'b1001
+`define ALU_CTRL_BLT    4'b1010
+`define ALU_CTRL_BGE    4'b1011
+`define ALU_CTRL_ECALL  4'b1100
