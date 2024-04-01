@@ -10,6 +10,9 @@ module ALU (
 
     // TODO: Implement ALU operations
     always @(*) begin
+        // $display("arithmetic: %b", alu_ctrl_out);
+        // $display("input A: %b", alu_in_1);
+        // $display("input B: %b", alu_in_2);
         alu_out = 32'b0;
         alu_bcond = 1'b0;
         case(alu_ctrl_out)
@@ -70,7 +73,8 @@ module ALU (
                 alu_out = 32'b0;
                 alu_bcond = 1'b0;
             end
-        endcase        
+        endcase   
+        // $display("output : %b", alu_out);     
     end
 
 endmodule

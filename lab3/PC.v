@@ -14,11 +14,13 @@ module PC(
             current_pc <= 32'b0;
         end
         else begin
+            // $display("clock!");
             if(pc_write_signal) begin
-               current_pc <= _pc; 
+                // $display("pc update: %b", next_pc);
+                current_pc <= next_pc; 
             end
             else begin
-                _pc <= next_pc;
+                _pc <= 32'b0;
             end
         end
     end

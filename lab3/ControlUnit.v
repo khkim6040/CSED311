@@ -28,6 +28,11 @@ module ControlUnit (input reset,
 
     // TODO: Microcode for Control Unit
     always @(*) begin 
+
+    end
+
+    // TODO: Calculate next state
+    always @(*) begin 
         ALUSrcA = 0;
         ALUSrcB = 1;
         IorD = 0;
@@ -50,6 +55,7 @@ module ControlUnit (input reset,
         else
             is_ecall = 0;
 
+        //$display("opcode: %b", opcode);
         case (state) 
             `IF_4: begin
                 MemRead = 1;
@@ -62,6 +68,7 @@ module ControlUnit (input reset,
             end
             `EX_1: begin
                 if (opcode == `BRANCH) begin
+                    $display("branch!");
                     PCWriteCond = 1;
                     ALUSrcA = 1;
                     ALUSrcB = 0;
@@ -105,7 +112,7 @@ module ControlUnit (input reset,
                     PCWrite = 1;
                     ALUSrcA = 0;
                     ALUSrcB = 2;
-                    ALUOp = `ALU_CTRL_SUB;
+                    ALUOp = `ALU_CTRL_ADD;
                 end
             end
             `MEM_4: begin
@@ -125,22 +132,26 @@ module ControlUnit (input reset,
                 PCWrite = 1;
                 ALUOp = `ALU_CTRL_ADD;
                 if (opcode == `ARITHMETIC | opcode == `ARITHMETIC_IMM)  begin
+                    PCSource = 0;
                     MemtoReg = 0;
                     RegWrite = 1;
                     ALUSrcA = 0;
                     ALUSrcB = 1;
                 end
                 else if (opcode == `LOAD) begin
+                    PCSource = 0;
                     MemtoReg = 1;
                     RegWrite = 1;
                     ALUSrcA = 0;
                     ALUSrcB = 1;
                 end
                 else if (opcode == `JAL) begin
+                    PCSource = 0;
                     ALUSrcA = 0;
                     ALUSrcB = 2;
                 end
                 else if (opcode == `JALR) begin
+                    PCSource = 0;
                     ALUSrcA = 1;
                     ALUSrcB = 2;
                 end
@@ -152,10 +163,8 @@ module ControlUnit (input reset,
                 PCWrite = 0;
             end
         endcase
-    end
-
-    // TODO: Calculate next state
-    always @(*) begin 
+        
+        //$display("current state: %b", state);
         case (state) 
             `IF_1: next_state = `IF_2;
             `IF_2: next_state = `IF_3;
@@ -164,7 +173,7 @@ module ControlUnit (input reset,
             `ID: next_state = `EX_1;
             `EX_1: next_state = (opcode == `BRANCH & bcond == 0) ? `IF_1 : `EX_2; // 주의) 레지스터 답은 똑같은데 사이클 수만 다르면 여기를 체크
             `EX_2: begin
-                if (opcode == `BRANCH) 
+                if (opcode == `BRANCH)
                     next_state = `IF_1;
                 else if (opcode == `LOAD | opcode == `STORE)
                     next_state = `MEM_1;

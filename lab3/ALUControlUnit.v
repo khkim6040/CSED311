@@ -13,7 +13,14 @@ module ALUControlUnit (
                 alu_ctrl_out = `ALU_ADD;
             end
             `ALU_CTRL_SUB: begin
-                alu_ctrl_out = `ALU_SUB;
+                //alu_ctrl_out = `ALU_SUB;
+                case(funct3)
+                    `FUNCT3_BEQ: alu_ctrl_out = `ALU_BEQ;
+                    `FUNCT3_BNE: alu_ctrl_out = `ALU_BNE;
+                    `FUNCT3_BLT: alu_ctrl_out = `ALU_BLT;
+                    `FUNCT3_BGE: alu_ctrl_out = `ALU_BGE;
+                    default: alu_ctrl_out = `ALU_ADD;
+                endcase
             end
             `ALU_CTRL_ARITH: begin
                case(funct3)

@@ -72,10 +72,13 @@ module cpu(input reset,       // positive reset signal
   // reg [31:0] B; // Read 2 data register
   // // reg [31:0] ALUOut; // ALU output register
   // reg [31:0] PC; // Program counter register
-  
+
+  assign opcode = IR_out[6:0];
   assign reg_rs1 = IR_out[19:15];
   assign reg_rs2 = IR_out[24:20];
   assign reg_rd = IR_out[11:7]; 
+  assign funct3 = IR_out[14:12];
+  assign funct7 = IR_out[31:25];
 
   
 
@@ -121,7 +124,7 @@ module cpu(input reset,       // positive reset signal
   PC pc(
     .reset(reset),       // input (Use reset to initialize PC. Initial value must be 0)
     .clk(clk),         // input
-    .next_pc(next_pc),     // input
+    .next_pc(pc_src_mux_out),     // input
     .pc_write_signal(pc_write || (pc_write_cond && !alu_bcond)),    // input
     .current_pc(PC_out)   // output
   );
