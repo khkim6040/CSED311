@@ -146,11 +146,13 @@ module ControlUnit (input reset,
                     ALUSrcB = 1;
                 end
                 else if (opcode == `JAL) begin
+                    RegWrite = 1;
                     PCSource = 0;
                     ALUSrcA = 0;
                     ALUSrcB = 2;
                 end
                 else if (opcode == `JALR) begin
+                    RegWrite = 1;
                     PCSource = 0;
                     ALUSrcA = 1;
                     ALUSrcB = 2;
