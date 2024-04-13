@@ -6,21 +6,13 @@ module PC(
     output reg [31:0] current_pc
 );
 
-    // pc를 지우고 current_pc, next_pc로 합칠수도?
-    reg [31:0] _pc = 32'b0;
-
     always @(posedge clk) begin
         if (reset) begin
             current_pc <= 32'b0;
         end
         else begin
-            // $display("clock!");
             if(pc_write_signal) begin
-                // $display("pc update: %b", next_pc);
                 current_pc <= next_pc; 
-            end
-            else begin
-                _pc <= 32'b0;
             end
         end
     end
