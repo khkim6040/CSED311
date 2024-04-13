@@ -26,12 +26,7 @@ module ControlUnit (input reset,
 
     reg [3:0] state, next_state;
 
-    // TODO: Microcode for Control Unit
-    always @(*) begin 
-
-    end
-
-    // TODO: Calculate next state
+    // Calculate next state
     always @(*) begin 
         ALUSrcA = 0;
         ALUSrcB = 1;
@@ -55,7 +50,6 @@ module ControlUnit (input reset,
         else
             is_ecall = 0;
 
-        //$display("opcode: %b", opcode);
         case (state) 
             `IF_4: begin
                 MemRead = 1;
@@ -68,7 +62,6 @@ module ControlUnit (input reset,
             end
             `EX_1: begin
                 if (opcode == `BRANCH) begin
-                    $display("branch!");
                     PCWriteCond = 1;
                     ALUSrcA = 1;
                     ALUSrcB = 0;
@@ -166,7 +159,6 @@ module ControlUnit (input reset,
             end
         endcase
         
-        //$display("current state: %b", state);
         case (state) 
             `IF_1: next_state = `IF_2;
             `IF_2: next_state = `IF_3;
@@ -191,7 +183,7 @@ module ControlUnit (input reset,
         endcase
     end
 
-    // TODO: Update state synchronously
+    // Update state synchronously
     always @(posedge clk) begin 
         if (reset == 1) begin
             state <= `IF_1;
