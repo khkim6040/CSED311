@@ -5,7 +5,6 @@ module TempRegister (input [31:0] in,
     reg [31:0] temp = 32'b0;
 
     always @(posedge able) begin
-        //$display("temp register updated: %b", in);
         temp <= in;
     end
 

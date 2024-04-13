@@ -13,12 +13,8 @@ module ImmediateGenerator (
     assign funct3 = part_of_inst[14:12];
     assign funct7 = part_of_inst[31:25];
 
-    // TODO: Generate immediate value depending on the instruction
+    // Generate immediate value depending on the instruction
     always @(*) begin
-        // $display("imm part_of_inst: %b", part_of_inst);
-        // $display("imm opcode: %b", opcode);
-        // $display("imm funct3: %b", funct3);
-        // $display("imm funct7: %b", funct7);
         // I-type
         if (opcode == `ARITHMETIC_IMM || opcode == `LOAD || opcode == `JALR) begin
             imm_gen_out = {{20{part_of_inst[31]}}, part_of_inst[31:20]};
@@ -38,7 +34,8 @@ module ImmediateGenerator (
         else begin
             imm_gen_out = 32'b0; // R-type and unknown
         end
-        //$display("imm value: %b", imm_gen_out);
     end
 
 endmodule
+
+

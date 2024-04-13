@@ -1,5 +1,4 @@
 // Decleration states used in ControlUnit.v
-
 `define IF_1 4'b0000
 `define IF_2 4'b0001
 `define IF_3 4'b0010
@@ -17,5 +16,4 @@
 
 `define WB 4'b1011
 
-`define HALT 4'b1100
 

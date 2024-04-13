@@ -44,9 +44,11 @@
 // ALUOp
 `define ALU_CTRL_ADD         2'b00 // JAL, JALR, LW, SW
 `define ALU_CTRL_SUB         2'b01 // BEQ, BNE, BLT, BGE
- // Divided OTHER case into arith and imme because of possible conflict between immediate sub which should not occur and R-type sub
+ // Divided OTHER case into arith and imme 
+ // because of possible conflict between 
+ // immediate sub which should not occur and R-type sub
 `define ALU_CTRL_ARITH       2'b10 // R-type, I-type, depending on FUNCT3, FUNCT7
-`define ALU_CTRL_IMME        2'b11 // I-type, depending on OPCODE
+`define ALU_CTRL_IMME        2'b11 // I-type, depending on FUNCT3
 
 
 // ALU control signals
