@@ -25,9 +25,17 @@ module cpu(input reset,       // positive reset signal
   wire[31:0] ID_rs2_dout;
   wire[31:0] ID_imm_gen_out;
   wire[31:0] ID_reg_rs1_mux_out;
+  // Output of control unit in ID stage
   wire ID_is_ecall;
   wire ID_halt_cpu;
+  wire ID_reg_write;
+  wire ID_mem_to_reg;
+  wire ID_mem_read;
+  wire ID_mem_write;
+  wire[1:0] ID_alu_op;
+  wire ID_alu_src;
   // Assingable wires in ID stage
+  wire[31:0] ID_full_inst;
   wire[6:0] ID_opcode;
   wire[2:0] ID_funct3;
   wire ID_funct7;
@@ -39,13 +47,18 @@ module cpu(input reset,       // positive reset signal
   wire[3:0] EX_alu_ctrl_out;
   wire[31:0] EX_alu_src2_mux_out;
   wire[31:0] EX_rs1_data;
+  wire[31:0] EX_rs2_data;
   wire[31:0] EX_alu_result;
+  wire[31:0] EX_imm_gen_out;
   wire EX_mem_read;
   wire EX_mem_to_reg;
   wire EX_mem_write;
   wire EX_alu_src;
   wire EX_reg_write;
   wire EX_halt_cpu;
+  wire EX_funct7;
+  wire EX_funct3;
+  wire EX_reg_rd;
   wire[1:0] EX_alu_op;
   
   // MEM stage wires
@@ -63,7 +76,7 @@ module cpu(input reset,       // positive reset signal
   // WB stage wires
   wire[31:0] WB_mem_to_reg_src_1;
   wire[31:0] WB_mem_to_reg_src_2;
-  wire[31:0] reg_write_mux_out;
+  wire[31:0] WB_reg_write_mux_out;
   wire WB_mem_to_reg;
   wire WB_reg_write;
   wire WB_halt_cpu; // Will set is_halted(output of this module)
@@ -96,7 +109,7 @@ module cpu(input reset,       // positive reset signal
   // From the control unit
   reg reg_EX_MEM_mem_write;     // will be used in MEM stage
   reg reg_EX_MEM_mem_read;      // will be used in MEM stage
-  reg reg_EX_MEM_is_branch;     // will be used in MEM stage
+  // reg reg_EX_MEM_is_branch;     // will be used in MEM stage, seems not used in this lab
   reg reg_EX_MEM_mem_to_reg;    // will be used in WB stage
   reg reg_EX_MEM_reg_write;     // will be used in WB stage
   reg reg_EX_MEM_halt_cpu;      // will be used in WB stage
@@ -114,6 +127,7 @@ module cpu(input reset,       // positive reset signal
   reg[31:0] reg_MEM_WB_mem_to_reg_src_1;
   reg[31:0] reg_MEM_WB_mem_to_reg_src_2;
 
+  assign ID_full_inst = reg_IF_ID_inst;
   assign ID_opcode = reg_IF_ID_inst[6:0];
   assign ID_funct3 = reg_IF_ID_inst[14:12];
   assign ID_funct7 = reg_IF_ID_inst[30];
@@ -157,30 +171,30 @@ module cpu(input reset,       // positive reset signal
     .rs1 (ID_reg_rs1_mux_out),          // input
     .rs2 (ID_reg_rs2),          // input
     .rd (ID_reg_rd),           // input
-    .rd_din (reg_write_mux_out),       // input
+    .rd_din (WB_reg_write_mux_out),       // input
     .reg_write (reg_MEM_WB_reg_write),    // input
     .rs1_dout (ID_rs1_dout),     // output
     .rs2_dout (ID_rs2_dout),      // output
-    .print_reg(print_regreg_)
+    .print_reg(print_reg)
   );
 
 
   // ---------- Control Unit ----------
   ControlUnit ctrl_unit (
     .part_of_inst(//TODO: how range of inst should be in?),  // input
-    .mem_read(EX_mem_read),      // output
-    .mem_to_reg(EX_mem_to_reg),    // output
-    .mem_write(EX_mem_write),     // output
-    .alu_src(EX_alu_src),       // output
-    .reg_write(EX_reg_write),  // output
+    .mem_read(ID_mem_read),      // output
+    .mem_to_reg(ID_mem_to_reg),    // output
+    .mem_write(ID_mem_write),     // output
+    .alu_src(ID_alu_src),       // output
+    .reg_write(ID_reg_write),  // output
     // .pc_to_reg(),     // output. seems not used in this lab
-    .alu_op(EX_alu_op),        // output
+    .alu_op(ID_alu_op),        // output
     .is_ecall(ID_is_ecall)       // output (ecall inst)
   );
 
   // ---------- Immediate Generator ----------
   ImmediateGenerator imm_gen(
-    .part_of_inst(reg_IF_ID_inst),  // input
+    .part_of_inst(ID_full_inst),  // input
     .imm_gen_out(ID_imm_gen_out)    // output
   );
 
@@ -194,8 +208,8 @@ module cpu(input reset,       // positive reset signal
 
   // ---------- ALU Control Unit ----------
   ALUControlUnit alu_ctrl_unit (
-    .funct7(ID_funct7)  // input
-    .funct3(ID_funct3) // input
+    .funct7(EX_funct7)  // input
+    .funct3(EX_funct3) // input
     .alu_op(EX_alu_op) // input
     .alu_ctrl_out(EX_alu_ctrl_out)         // output
   );
@@ -221,11 +235,11 @@ module cpu(input reset,       // positive reset signal
   DataMemory dmem(
     .reset (reset),      // input
     .clk (clk),        // input
-    .addr (),       // input
-    .din (),        // input
-    .mem_read (),   // input
-    .mem_write (),  // input
-    .dout ()        // output
+    .addr (MEM_alu_out),       // input
+    .din (MEM_dmem_din),        // input
+    .mem_read (MEM_mem_read),   // input
+    .mem_write (MEM_mem_write),  // input
+    .dout (MEM_dmem_dout)        // output
   );
 
   // Update MEM/WB pipeline registers here
@@ -247,20 +261,20 @@ module cpu(input reset,       // positive reset signal
     .x1(ID_reg_rs1)
     .swch(ID_is_ecall)
     .out(ID_reg_rs1_mux_out)
-  )
+  );
 
   Mux_2_to_1 alu_src2_mux(
-    .x0(ID_EX_rs2_data)
-    .x1(ID_EX_imm)
-    .swch(reg_ID_EX_alu_src)
-    .out(reg_alu_src2_mux_out)
- reg_ )reg_reg_
+    .x0(EX_rs2_data)
+    .x1(EX_imm_gen_out)
+    .swch(EX_alu_src)
+    .out(EX_alu_src2_mux_out)
+  );
   
-    Mux_2_to_1 reg_reg_write_mux(
-    .x0(reg_MEM_WB_mem_to_reg_src_1),        // input
-    .x1(reg_MEM_WB_mem_to_reg_src_2),        // input
-    .swch(reg_MEM_WB_mem_to_reg),         // input
-    .out(reg_reg_write_mux_out)          // output
+    Mux_2_to_1 reg_write_mux(
+    .x0(WB_mem_to_reg_src_1),        // input
+    .x1(WB_mem_to_reg_src_2),        // input
+    .swch(WB_mem_to_reg),         // input
+    .out(WB_reg_write_mux_out)          // output
   );
   
 endmodulereg
