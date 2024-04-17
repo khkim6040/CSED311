@@ -127,6 +127,7 @@ module cpu(input reset,       // positive reset signal
   reg[31:0] reg_MEM_WB_mem_to_reg_src_1;
   reg[31:0] reg_MEM_WB_mem_to_reg_src_2;
 
+  /***** Wire Instantiation *****/
   assign ID_full_inst = reg_IF_ID_inst;
   assign ID_opcode = reg_IF_ID_inst[6:0];
   assign ID_funct3 = reg_IF_ID_inst[14:12];
@@ -134,10 +135,9 @@ module cpu(input reset,       // positive reset signal
   assign ID_reg_rs1 = reg_IF_ID_inst[19:15];
   assign ID_reg_rs2 = reg_IF_ID_inst[24:20];
   assign ID_reg_rd = reg_IF_ID_inst[11:7];
-
   assign ID_halt_cpu = ID_is_ecall && ID_rs1_dout == 10;
 
-  // ---------- Update program counter ----------
+// ------------------- IF stage -------------------
   // PC must be updated on the rising edge (positive edge) of the clock.
   PC pc(
     .reset(reset),       // input (Use reset to initialize PC. Initial value must be 0)
@@ -145,8 +145,13 @@ module cpu(input reset,       // positive reset signal
     .next_pc(IF_pc_4_adder_out),     // input
     .current_pc(IF_current_pc)   // output
   );
-  
-  // ---------- Instruction Memory ----------
+
+  Adder pc_4_adder(
+    .x0(IF_current_pc),  // input
+    .x1(4),  // input
+    .sum(IF_pc_4_adder_out) // output
+  );
+
   InstMemory imem(
     .reset(reset),   // input
     .clk(clk),     // input
@@ -164,7 +169,15 @@ module cpu(input reset,       // positive reset signal
     end
   end
 
-  // ---------- Register File ----------
+// ------------------- ID stage -------------------
+
+  Mux_2_to_1 reg_rs1_mux(
+    .x0(17)
+    .x1(ID_reg_rs1)
+    .swch(ID_is_ecall)
+    .out(ID_reg_rs1_mux_out)
+  );
+
   RegisterFile reg_file (
     .reset (reset),        // input
     .clk (clk),          // input
@@ -179,7 +192,6 @@ module cpu(input reset,       // positive reset signal
   );
 
 
-  // ---------- Control Unit ----------
   ControlUnit ctrl_unit (
     .part_of_inst(//TODO: how range of inst should be in?),  // input
     .mem_read(ID_mem_read),      // output
@@ -192,7 +204,6 @@ module cpu(input reset,       // positive reset signal
     .is_ecall(ID_is_ecall)       // output (ecall inst)
   );
 
-  // ---------- Immediate Generator ----------
   ImmediateGenerator imm_gen(
     .part_of_inst(ID_full_inst),  // input
     .imm_gen_out(ID_imm_gen_out)    // output
@@ -206,7 +217,15 @@ module cpu(input reset,       // positive reset signal
     end
   end
 
-  // ---------- ALU Control Unit ----------
+// ------------------- EX stage -------------------
+
+  Mux_2_to_1 alu_src2_mux(
+    .x0(EX_rs2_data)
+    .x1(EX_imm_gen_out)
+    .swch(EX_alu_src)
+    .out(EX_alu_src2_mux_out)
+  );
+
   ALUControlUnit alu_ctrl_unit (
     .funct7(EX_funct7)  // input
     .funct3(EX_funct3) // input
@@ -214,7 +233,6 @@ module cpu(input reset,       // positive reset signal
     .alu_ctrl_out(EX_alu_ctrl_out)         // output
   );
 
-  // ---------- ALU ----------
   ALU alu (
     .alu_ctrl_out(EX_alu_ctrl_out),      // input
     .alu_in_1(EX_rs1_data),    // input  
@@ -231,7 +249,8 @@ module cpu(input reset,       // positive reset signal
     end
   end
 
-  // ---------- Data Memory ----------
+// ------------------- MEM stage -------------------
+
   DataMemory dmem(
     .reset (reset),      // input
     .clk (clk),        // input
@@ -250,31 +269,13 @@ module cpu(input reset,       // positive reset signal
     end
   end
 
-  Adder pc_4_adder(
-    .x0(IF_current_pc),  // input
-    .x1(4),  // input
-    .sum(IF_pc_4_adder_out) // output
-  );
-
-  Mux_2_to_1 reg_rs1_mux(
-    .x0(17)
-    .x1(ID_reg_rs1)
-    .swch(ID_is_ecall)
-    .out(ID_reg_rs1_mux_out)
-  );
-
-  Mux_2_to_1 alu_src2_mux(
-    .x0(EX_rs2_data)
-    .x1(EX_imm_gen_out)
-    .swch(EX_alu_src)
-    .out(EX_alu_src2_mux_out)
-  );
+// ------------------- WB stage -------------------
   
-    Mux_2_to_1 reg_write_mux(
+  Mux_2_to_1 reg_write_mux(
     .x0(WB_mem_to_reg_src_1),        // input
     .x1(WB_mem_to_reg_src_2),        // input
     .swch(WB_mem_to_reg),         // input
     .out(WB_reg_write_mux_out)          // output
   );
   
-endmodulereg
+endmodule
