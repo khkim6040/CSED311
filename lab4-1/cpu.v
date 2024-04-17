@@ -45,6 +45,7 @@ module cpu(input reset,       // positive reset signal
   wire EX_mem_write;
   wire EX_alu_src;
   wire EX_reg_write;
+  wire EX_halt_cpu;
   wire[1:0] EX_alu_op;
   
   // MEM stage wires
@@ -52,18 +53,20 @@ module cpu(input reset,       // positive reset signal
   wire[31:0] MEM_dmem_din;
   wire[31:0] MEM_rd;
   wire[31:0] MEM_dmem_dout;
-  reg MEM_mem_write;
-  reg MEM_mem_read;
-  reg MEM_is_branch;
-  reg MEM_mem_to_reg;
-  reg MEM_reg_write;
+  wire MEM_mem_write;
+  wire MEM_mem_read;
+  wire MEM_is_branch;
+  wire MEM_mem_to_reg;
+  wire MEM_reg_write;
+  wire MEM_halt_cpu;
 
   // WB stage wires
   wire[31:0] WB_mem_to_reg_src_1;
   wire[31:0] WB_mem_to_reg_src_2;
   wire[31:0] reg_write_mux_out;
-  reg WB_mem_to_reg;
-  reg WB_reg_write;
+  wire WB_mem_to_reg;
+  wire WB_reg_write;
+  wire WB_halt_cpu; // Will set is_halted(output of this module)
 
 
   /***** Register declarations *****/
@@ -96,6 +99,7 @@ module cpu(input reset,       // positive reset signal
   reg reg_EX_MEM_is_branch;     // will be used in MEM stage
   reg reg_EX_MEM_mem_to_reg;    // will be used in WB stage
   reg reg_EX_MEM_reg_write;     // will be used in WB stage
+  reg reg_EX_MEM_halt_cpu;      // will be used in WB stage
   // From others
   reg[31:0] reg_EX_MEM_alu_out;
   reg[31:0] reg_EX_MEM_dmem_din;
@@ -105,6 +109,7 @@ module cpu(input reset,       // positive reset signal
   // From the control unit
   reg reg_MEM_WB_mem_to_reg;    // will be used in WB stage
   reg reg_MEM_WB_reg_write;     // will be used in WB stage
+  reg reg_MEM_WB_halt_cpu;      // will be used in WB stage
   // From others
   reg[31:0] reg_MEM_WB_mem_to_reg_src_1;
   reg[31:0] reg_MEM_WB_mem_to_reg_src_2;
