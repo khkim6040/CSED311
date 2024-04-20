@@ -18,7 +18,7 @@ module cpu(input reset,       // positive reset signal
   // Register update signals
   wire PC_write; // output of HazardDetector module, for PC module
   wire IF_ID_write; // output of HazardDetector module, for IF/ID pipeline register
-  wire nop_signal; // output of HazardDetector module, for ControlUnit module
+  wire ID_nop_signal; // output of HazardDetector module, for ID/EX pipeline register
 
   // IF stage wires
   wire[31:0] IF_current_pc; // output of PC module
@@ -223,8 +223,7 @@ module cpu(input reset,       // positive reset signal
   );
 
   ControlUnit ctrl_unit (
-    .part_of_inst(//TODO: how range of inst should be in?),  // input
-    .nop_signal(nop_signal),  // input
+    .part_of_inst(ID_opcode) // input
     .mem_read(ID_mem_read),      // output
     .mem_to_reg(ID_mem_to_reg),    // output
     .mem_write(ID_mem_write),     // output
@@ -253,12 +252,14 @@ module cpu(input reset,       // positive reset signal
     .mem_read(EX_mem_read),  // input
     .PC_write(PC_write),  // output
     .IF_ID_write(IF_ID_write),  // output
-    .nop_signal(nop_signal)  // output
+    .ID_nop_signal(ID_nop_signal)  // output
   );
 
   // Update ID/EX pipeline registers here
   always @(posedge clk) begin
-    if (reset) begin
+    // no-op due to Data Hazard is performed here
+    if (reset || ID_nop_signal) begin
+      // TODO: isn't it enough to reset only signals not registers for nop signal?
       reg_ID_EX_alu_op <= 2'b0;
       reg_ID_EX_alu_src <= 1'b0;
       reg_ID_EX_mem_write <= 1'b0;
