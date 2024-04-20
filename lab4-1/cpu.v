@@ -262,8 +262,7 @@ module cpu(input reset,       // positive reset signal
   HazardDetector hazard_detector(
     .clk(clk),  // input
     .reset(reset),  // input
-    .rs1(ID_reg_rs1_mux_out),  // input
-    .rs2(ID_reg_rs2),  // input
+    .instruction(ID_full_inst),  // input
     .EX_rd(EX_reg_rd),   // input
     .MEM_rd(),  //TODO: connect pin // input
     .mem_read(EX_mem_read),  // input

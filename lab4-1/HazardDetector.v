@@ -1,9 +1,10 @@
+`include "opcodes.v"
+
 module HazardDetector (input clk,
                        input reset,
-                       input rs1[4:0],
-                       input rs2[4:0],
-                       input EX_rd[4:0],
-                       input MEM_rd[4:0],
+                       input [31:0] instruction,
+                       input [4:0] EX_rd,
+                       input [4:0] MEM_rd,
                        input mem_read,
                        input is_ecall,
                        output reg PC_write,
@@ -11,6 +12,20 @@ module HazardDetector (input clk,
                        output reg ID_nop_signal);
 
     reg [1:0] stall_cycle_left;
+    reg [4:0] rs1, rs2;
+    reg [6:0] opcode;
+    assign opcode = instruction[6:0];
+    assign rs1 = instruction[19:15];
+    assign rs2 = instruction[24:20];
+    // Arithmetic uses both rs1, rs2
+    // Immediate uses only rs1    
+    // Load uses only rs1
+    // Store uses both rs1, rs2, even though rs2 is not used in the ALU
+    // Branch uses both rs1, rs2
+    // Jump uses only rs1
+    wire is_rs1_used, is_rs2_used;
+    assign is_rs1_used = rs1 != 0 && (opcode == `ARITHMETIC || opcode == `ARITHMETIC_IMM || opcode == `LOAD || opcode == `STORE || opcode == `BRANCH || opcode == `JAL);
+    assign is_rs2_used = rs2 != 0 && (opcode == `ARITHMETIC || opcode == `STORE || opcode == `BRANCH);
 
     always @(posedge clk) begin
         if(reset) begin
@@ -26,17 +41,17 @@ module HazardDetector (input clk,
     // inspect the hazard
     always @(*) begin
         // Load-use hazard
-        if(mem_read && (rs1 == EX_rd || rs2 == EX_rd)) begin
+        if(mem_read && ((is_rs1_used && rs1 == EX_rd) || (is_rs2_used && rs2 == EX_rd))) begin
             stall_cycle_left = 1;
         end
         // Ecall hazard because ecall comparison executes in ID stage
         else if(is_ecall) begin
             // When hazard distance is 1
-            if (rs1 == EX_rd || rs2 == EX_rd) begin
+            if ((is_rs1_used && rs1 == EX_rd) || (is_rs2_used && rs2 == EX_rd)) begin
                 stall_cycle_left = 2;
             end
             // When hazard distance is 2
-            else if (rs1 == MEM_rd || rs2 == MEM_rd) begin
+            else if ((is_rs1_used && rs1 == MEM_rd) || (is_rs2_used && rs2 == MEM_rd)) begin
                 stall_cycle_left = 1;
             end
         end
