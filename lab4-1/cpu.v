@@ -29,7 +29,6 @@ module cpu(input reset,       // positive reset signal
   wire[31:0] ID_rs1_dout; // output of RegisterFile module
   wire[31:0] ID_rs2_dout; // output of RegisterFile module
   wire[31:0] ID_imm_gen_out; // output of ImmediateGenerator module
-  wire[31:0] ID_reg_rs1_mux_out; // Output of Mux_2_to_1 module
   wire ID_is_ecall; // output of ControlUnit module
   wire ID_is_halted; // output of HaltDetector module
   wire ID_reg_write; // output of ControlUnit module
@@ -43,6 +42,7 @@ module cpu(input reset,       // positive reset signal
   wire[2:0] ID_funct3; // input ID stage modules
   wire ID_funct7; // input ID stage modules
   wire[4:0] ID_reg_rs1; // input ID stage modules
+  wire[4:0] ID_reg_rs1_mux_out; // Output of Mux_2_to_1 module
   wire[4:0] ID_reg_rs2; // input ID stage modules
   wire[4:0] ID_reg_rd; // input ID stage modules
   // Input Wires Initialization
@@ -308,7 +308,7 @@ module cpu(input reset,       // positive reset signal
       reg_ID_EX_rd <= ID_reg_rd;
       reg_ID_EX_funct7 <= ID_funct7;
       reg_ID_EX_funct3 <= ID_funct3;
-      reg_ID_EX_rs1_index <= ID_reg_rs1;
+      reg_ID_EX_rs1_index <= ID_reg_rs1_mux_out;
       reg_ID_EX_rs2_index <= ID_reg_rs2;
     end
   end
