@@ -358,5 +358,7 @@ module cpu(input reset,       // positive reset signal
     .swch(WB_mem_to_reg),         // input
     .out(WB_reg_write_mux_out)          // output
   );
+
+  assign is_halted = reg_MEM_WB_is_halted;
   
 endmodule
