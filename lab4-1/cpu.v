@@ -15,6 +15,11 @@ module cpu(input reset,       // positive reset signal
 
 
   /***** Wire declarations *****/
+  // Register update signals
+  wire PC_write; // output of HazardDetector module, for PC module
+  wire IF_ID_write; // output of HazardDetector module, for IF/ID pipeline register
+  wire ID_nop_signal; // output of HazardDetector module, for ID/EX pipeline register
+
   // IF stage wires
   wire[31:0] IF_current_pc; // output of PC module
   wire[31:0] IF_imem_out; // output of InstMemory module
@@ -175,6 +180,7 @@ module cpu(input reset,       // positive reset signal
     .reset(reset),       // input (Use reset to initialize PC. Initial value must be 0)
     .clk(clk),         // input
     .next_pc(IF_pc_4_adder_out),     // input
+    .pc_write_signal(PC_write),     // input
     .current_pc(IF_current_pc)   // output
   );
 
@@ -197,7 +203,9 @@ module cpu(input reset,       // positive reset signal
       reg_IF_ID_inst <= 32'b0; 
     end
     else begin
-      reg_IF_ID_inst <= IF_imem_out;
+      if(IF_ID_write) begin
+        reg_IF_ID_inst <= IF_imem_out;
+      end
     end
   end
 
@@ -224,7 +232,7 @@ module cpu(input reset,       // positive reset signal
   );
 
   ControlUnit ctrl_unit (
-    .part_of_inst(//TODO: how range of inst should be in?),  // input
+    .part_of_inst(ID_opcode) // input
     .mem_read(ID_mem_read),      // output
     .mem_to_reg(ID_mem_to_reg),    // output
     .mem_write(ID_mem_write),     // output
@@ -246,9 +254,25 @@ module cpu(input reset,       // positive reset signal
     .is_halted(ID_is_halted)      // output
   );  
 
+  HazardDetector hazard_detector(
+    .clk(clk),  // input
+    .reset(reset),  // input
+    .rs1(ID_reg_rs1_mux_out),  // input
+    .rs2(ID_reg_rs2),  // input
+    .EX_rd(EX_reg_rd),   // input
+    .MEM_rd(),  //TODO: connect pin // input
+    .mem_read(EX_mem_read),  // input
+    .is_ecall(ID_is_ecall),  // input
+    .PC_write(PC_write),  // output
+    .IF_ID_write(IF_ID_write),  // output
+    .ID_nop_signal(ID_nop_signal)  // output
+  );
+
   // Update ID/EX pipeline registers here
   always @(posedge clk) begin
-    if (reset) begin
+    // no-op due to Data Hazard is performed here
+    if (reset || ID_nop_signal) begin
+      // TODO: isn't it enough to reset only signals not registers for nop signal?
       reg_ID_EX_alu_op <= 2'b0;
       reg_ID_EX_alu_src <= 1'b0;
       reg_ID_EX_mem_write <= 1'b0;
@@ -399,5 +423,7 @@ module cpu(input reset,       // positive reset signal
     .swch(WB_mem_to_reg),         // input
     .out(WB_reg_write_mux_out)          // output
   );
+
+  assign is_halted = reg_MEM_WB_is_halted;
   
 endmodule

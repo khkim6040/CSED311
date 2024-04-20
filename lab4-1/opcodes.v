@@ -39,5 +39,29 @@
 `define FUNCT3_SRL      3'b101
 
 // FUNCT7
-`define FUNCT7_SUB      7'b0100000
-`define FUNCT7_OTHERS   7'b0000000
+`define FUNCT7_SUB      1'b1
+`define FUNCT7_OTHERS   1'b0
+
+
+// ALUOp
+`define ALU_CTRL_ADD         2'b00 // JAL, JALR, LW, SW, Default value of don't cares
+`define ALU_CTRL_SUB         2'b01 // BEQ, BNE, BLT, BGE
+ // Divided OTHER case into arith and imme 
+ // because of possible conflict between 
+ // immediate sub which should not occur and R-type sub
+`define ALU_CTRL_ARITH       2'b10 // R-type, I-type, depending on FUNCT3, FUNCT7
+`define ALU_CTRL_IMME        2'b11 // I-type, depending on FUNCT3
+
+
+// ALU control signals
+`define ALU_ADD    4'b0001
+`define ALU_SUB    4'b0010
+`define ALU_SLL    4'b0011
+`define ALU_XOR    4'b0100
+`define ALU_SRL    4'b0101
+`define ALU_OR     4'b0110
+`define ALU_AND    4'b0111
+`define ALU_BEQ    4'b1000
+`define ALU_BNE    4'b1001
+`define ALU_BLT    4'b1010
+`define ALU_BGE    4'b1011

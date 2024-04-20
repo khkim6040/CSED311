@@ -1,7 +1,7 @@
 `include "opcodes.v"
 
 module ALUControlUnit (
-    input[6:0] funct7, // TODO: change to single bit
+    input funct7,
     input[2:0] funct3,
     input[1:0] ALUOp,
     output reg [3:0] alu_ctrl_out
@@ -13,7 +13,6 @@ module ALUControlUnit (
                 alu_ctrl_out = `ALU_ADD;
             end
             `ALU_CTRL_SUB: begin
-                //alu_ctrl_out = `ALU_SUB;
                 case(funct3)
                     `FUNCT3_BEQ: alu_ctrl_out = `ALU_BEQ;
                     `FUNCT3_BNE: alu_ctrl_out = `ALU_BNE;
