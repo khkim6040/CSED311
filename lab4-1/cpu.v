@@ -59,13 +59,17 @@ module cpu(input reset,       // positive reset signal
   wire EX_alu_src; // input of ALU module
   wire[1:0] EX_alu_op; // input of ALUControlUnit module
   wire EX_funct7; // input of ALUControlUnit module
-  wire EX_funct3; // input of ALUControlUnit module
+  wire [2:0] EX_funct3; // input of ALUControlUnit module
   wire EX_mem_read; // input of EX_MEM pipeline register
   wire EX_mem_to_reg; // input of EX_MEM pipeline register
   wire EX_mem_write; // input of EX_MEM pipeline register
-  wire EX_reg_rd; // input of EX_MEM pipeline register
+  wire [4:0] EX_reg_rd; // input of EX_MEM pipeline register
   wire EX_is_halted; // input of EX_MEM pipeline register
   wire EX_reg_write; // input of EX_MEM pipeline register
+  wire forwardA; // input of forwarding_src1_mux
+  wire forwardB; // input of forwarding_src2_mux
+  wire [31:0] forwardA_out; // input of ALU A src
+  wire [31:0] forwardB_out; // input of ALU B src
   // Input Wires Initialization
   assign EX_imm = reg_ID_EX_imm;
   assign EX_rs1_data = reg_ID_EX_rs1_data;
@@ -91,6 +95,7 @@ module cpu(input reset,       // positive reset signal
   wire MEM_mem_to_reg; // input of MEM_WB pipeline register
   wire MEM_reg_write; // input of MEM_WB pipeline register
   wire MEM_is_halted; // input of MEM_WB pipeline register
+  wire [4:0] MEM_reg_rd; // input of MEM_WB pipeline register
   // Input Wires Initialization
   assign MEM_alu_out = reg_EX_MEM_alu_out;
   assign MEM_dmem_din = reg_EX_MEM_dmem_din;
@@ -99,6 +104,7 @@ module cpu(input reset,       // positive reset signal
   assign MEM_mem_to_reg = reg_EX_MEM_mem_to_reg;
   assign MEM_reg_write = reg_EX_MEM_reg_write;
   assign MEM_is_halted = reg_EX_MEM_is_halted;
+  assign MEM_reg_rd = reg_EX_MEM_rd;
 
   // WB stage wires
   wire[31:0] WB_reg_write_mux_out; // output of Mux_2_to_1 module
@@ -107,11 +113,13 @@ module cpu(input reset,       // positive reset signal
   wire[31:0] WB_mem_to_reg_src_2; // input of Mux_2_to_1 module
   wire WB_mem_to_reg; // input of Mux_2_to_1 module
   wire WB_reg_write; // input of MEM_WB pipeline register
+  wire [4:0] WB_reg_rd;
   // Input Wires Initialization
   assign WB_mem_to_reg_src_1 = reg_MEM_WB_mem_to_reg_src_1;
   assign WB_mem_to_reg_src_2 = reg_MEM_WB_mem_to_reg_src_2;
   assign WB_mem_to_reg = reg_MEM_WB_mem_to_reg;
   assign WB_reg_write = reg_MEM_WB_reg_write;
+  assign WB_reg_rd = reg_MEM_WB_rd;
 
   /***** Register declarations *****/
   // You need to modify the width of registers
@@ -135,7 +143,7 @@ module cpu(input reset,       // positive reset signal
   reg[31:0] reg_ID_EX_imm;
   reg[4:0] reg_ID_EX_rd;
   reg reg_ID_EX_funct7;
-  reg reg_ID_EX_funct3;
+  reg [2:0] reg_ID_EX_funct3;
 
   /***** EX/MEM pipeline registers *****/
   // From the control unit
@@ -158,6 +166,7 @@ module cpu(input reset,       // positive reset signal
   // From others
   reg[31:0] reg_MEM_WB_mem_to_reg_src_1;
   reg[31:0] reg_MEM_WB_mem_to_reg_src_2;
+  reg[4:0] reg_MEM_WB_rd;
 
 
 // ------------------- IF stage -------------------
@@ -273,11 +282,41 @@ module cpu(input reset,       // positive reset signal
 
 // ------------------- EX stage -------------------
 
+
   Mux_2_to_1 alu_src2_mux(
     .x0(EX_rs2_data)
     .x1(EX_imm)
     .swch(EX_alu_src)
     .out(EX_alu_src2_mux_out)
+  );
+
+  ForwardingUnit ForwardingUnit(
+    .EX_rs1_data(EX_rs1_data)
+    .EX_rs2_data(EX_rs2_data)
+    .MEM_reg_rd(MEM_reg_rd)
+    .WB_reg_rd(WB_reg_rd)
+    .MEM_reg_write(MEM_reg_write)
+    .WB_reg_write(WB_reg_write)
+    .forwardA(forwardA)
+    .forwardB(forwardB)
+  );
+
+  Mux_4_to_1 forwarding_src1_mux(
+    .x0(EX_rs1_data)
+    .x1(WB_reg_write_mux_out)
+    .x2(MEM_alu_out)
+    .x3(0)
+    .swch(forwardA)
+    .out(forwardA_out)
+  );
+
+  Mux_4_to_1 forwarding_src2_mux(
+    .x0(EX_alu_src2_mux_out)
+    .x1(WB_reg_write_mux_out)
+    .x2(MEM_alu_out)
+    .x3(0)
+    .swch(forwardB)
+    .out(forwardB_out)
   );
 
   ALUControlUnit alu_ctrl_unit (
@@ -289,8 +328,8 @@ module cpu(input reset,       // positive reset signal
 
   ALU alu (
     .alu_ctrl_out(EX_alu_ctrl_out),      // input
-    .alu_in_1(EX_rs1_data),    // input  
-    .alu_in_2(EX_alu_src2_mux_out),    // input
+    .alu_in_1(forwardA_out),    // input  
+    .alu_in_2(forwardB_out),    // input
     .alu_result(EX_alu_result),  // output
     // .alu_zero()     // output. seems not used in this lab
   );
@@ -339,6 +378,7 @@ module cpu(input reset,       // positive reset signal
       reg_MEM_WB_is_halted <= 1'b0;
       reg_MEM_WB_mem_to_reg_src_1 <= 32'b0;
       reg_MEM_WB_mem_to_reg_src_2 <= 32'b0;
+      reg_MEM_WB_rd <= 5'b0;
     end
     else begin
       reg_MEM_WB_mem_to_reg <= MEM_mem_to_reg;
@@ -346,6 +386,7 @@ module cpu(input reset,       // positive reset signal
       reg_MEM_WB_is_halted <= MEM_is_halted;
       reg_MEM_WB_mem_to_reg_src_1 <= MEM_dmem_dout;
       reg_MEM_WB_mem_to_reg_src_2 <= MEM_alu_out;
+      reg_MEM_WB_rd <= MEM_reg_rd;
     end
   end
 
