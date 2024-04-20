@@ -2,7 +2,8 @@ module HazardDetector (input clk,
                        input reset,
                        input rs1[4:0],
                        input rs2[4:0],
-                       input rd[4:0],
+                       input EX_rd[4:0],
+                       input MEM_rd[4:0],
                        input mem_read,
                        input is_ecall,
                        output reg PC_write,
@@ -25,12 +26,19 @@ module HazardDetector (input clk,
     // inspect the hazard
     always @(*) begin
         // Load-use hazard
-        if(mem_read && (rs1 == rd || rs2 == rd)) begin
+        if(mem_read && (rs1 == EX_rd || rs2 == EX_rd)) begin
             stall_cycle_left = 1;
         end
         // Ecall hazard because ecall comparison executes in ID stage
-        else if(is_ecall && (rs1 == rd || rs2 == rd)) begin
-            stall_cycle_left = 2;
+        else if(is_ecall) begin
+            // When hazard distance is 1
+            if (rs1 == EX_rd || rs2 == EX_rd) begin
+                stall_cycle_left = 2;
+            end
+            // When hazard distance is 2
+            else if (rs1 == MEM_rd || rs2 == MEM_rd) begin
+                stall_cycle_left = 1;
+            end
         end
     end
 
