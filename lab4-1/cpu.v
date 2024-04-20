@@ -246,10 +246,13 @@ module cpu(input reset,       // positive reset signal
   );  
 
   HazardDetector hazard_detector(
+    .clk(clk),  // input
+    .reset(reset),  // input
     .rs1(ID_reg_rs1_mux_out),  // input
     .rs2(ID_reg_rs2),  // input
     .rd(EX_reg_rd),   // input
     .mem_read(EX_mem_read),  // input
+    .is_ecall(ID_is_ecall),  // input
     .PC_write(PC_write),  // output
     .IF_ID_write(IF_ID_write),  // output
     .ID_nop_signal(ID_nop_signal)  // output
