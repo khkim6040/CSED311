@@ -58,6 +58,10 @@ module cpu(input reset,       // positive reset signal
   wire[3:0] EX_alu_ctrl_out; // output of ALUControlUnit module
   wire[31:0] EX_alu_src2_mux_out; // output of Mux_2_to_1 module
   wire[31:0] EX_alu_result; // output of ALU module
+  wire forwardA; // input of forwarding_src1_mux
+  wire forwardB; // input of forwarding_src2_mux
+  wire [31:0] forwardA_out; // input of ALU A src
+  wire [31:0] forwardB_out; // input of ALU B src
   wire[31:0] EX_imm; // input of Mux_2_to_1 module
   wire[31:0] EX_rs1_data; // input of ALU module
   wire[31:0] EX_rs2_data; // input of Mux_2_to_1 module
@@ -71,10 +75,8 @@ module cpu(input reset,       // positive reset signal
   wire [4:0] EX_reg_rd; // input of EX_MEM pipeline register
   wire EX_is_halted; // input of EX_MEM pipeline register
   wire EX_reg_write; // input of EX_MEM pipeline register
-  wire forwardA; // input of forwarding_src1_mux
-  wire forwardB; // input of forwarding_src2_mux
-  wire [31:0] forwardA_out; // input of ALU A src
-  wire [31:0] forwardB_out; // input of ALU B src
+  wire [4:0] EX_rs1_index; // input of forwarding unit
+  wire [4:0] EX_rs2_index; // input of forwarding unit
   // Input Wires Initialization
   assign EX_imm = reg_ID_EX_imm;
   assign EX_rs1_data = reg_ID_EX_rs1_data;
@@ -89,7 +91,9 @@ module cpu(input reset,       // positive reset signal
   assign EX_reg_rd = reg_ID_EX_rd;
   assign EX_is_halted = reg_ID_EX_is_halted;
   assign EX_reg_write = reg_ID_EX_reg_write;
-  
+  assign EX_rs1_index = reg_ID_EX_rs1_index;
+  assign EX_rs2_index = reg_ID_EX_rs2_index;
+
   // MEM stage wires
   wire[31:0] MEM_dmem_dout; // output of DataMemory module
   wire[31:0] MEM_alu_out; // input of DataMemory module
@@ -113,7 +117,6 @@ module cpu(input reset,       // positive reset signal
 
   // WB stage wires
   wire[31:0] WB_reg_write_mux_out; // output of Mux_2_to_1 module
-  wire WB_is_halted; // output, will set is_halted(output of this module)
   wire[31:0] WB_mem_to_reg_src_1; // input of Mux_2_to_1 module
   wire[31:0] WB_mem_to_reg_src_2; // input of Mux_2_to_1 module
   wire WB_mem_to_reg; // input of Mux_2_to_1 module
@@ -149,6 +152,8 @@ module cpu(input reset,       // positive reset signal
   reg[4:0] reg_ID_EX_rd;
   reg reg_ID_EX_funct7;
   reg [2:0] reg_ID_EX_funct3;
+  reg [4:0] reg_ID_EX_rs1_index;
+  reg [4:0] reg_ID_EX_rs2_index;
 
   /***** EX/MEM pipeline registers *****/
   // From the control unit
@@ -204,7 +209,7 @@ module cpu(input reset,       // positive reset signal
     end
     else begin
       if(IF_ID_write) begin
-        reg_IF_ID_inst <= IF_imem_out;
+        reg_IF_ID_inst <= IF_imem_out; // latch 오류 안 나려나...
       end
     end
   end
@@ -225,7 +230,7 @@ module cpu(input reset,       // positive reset signal
     .rs2 (ID_reg_rs2),          // input
     .rd (ID_reg_rd),           // input
     .rd_din (WB_reg_write_mux_out),       // input
-    .reg_write (reg_MEM_WB_reg_write),    // input
+    .reg_write (WB_reg_write),    // input
     .rs1_dout (ID_rs1_dout),     // output
     .rs2_dout (ID_rs2_dout),      // output
     .print_reg(print_reg)
@@ -286,6 +291,8 @@ module cpu(input reset,       // positive reset signal
       reg_ID_EX_rd <= 5'b0;
       reg_ID_EX_funct7 <= 1'b0;
       reg_ID_EX_funct3 <= 3'b0;
+      reg_ID_EX_rs1_index <= 5'b0;
+      reg_ID_EX_rs2_index <= 5'b0;
     end
     else begin
       reg_ID_EX_alu_op <= ID_alu_op;
@@ -301,26 +308,21 @@ module cpu(input reset,       // positive reset signal
       reg_ID_EX_rd <= ID_reg_rd;
       reg_ID_EX_funct7 <= ID_funct7;
       reg_ID_EX_funct3 <= ID_funct3;
+      reg_ID_EX_rs1_index <= ID_reg_rs1;
+      reg_ID_EX_rs2_index <= ID_reg_rs2;
     end
   end
 
 // ------------------- EX stage -------------------
 
-
-  Mux_2_to_1 alu_src2_mux(
-    .x0(EX_rs2_data)
-    .x1(EX_imm)
-    .swch(EX_alu_src)
-    .out(EX_alu_src2_mux_out)
-  );
-
   ForwardingUnit ForwardingUnit(
-    .EX_rs1_data(EX_rs1_data)
-    .EX_rs2_data(EX_rs2_data)
+    .EX_rs1_index(EX_rs1_index)
+    .EX_rs2_index(EX_rs2_index)
     .MEM_reg_rd(MEM_reg_rd)
     .WB_reg_rd(WB_reg_rd)
     .MEM_reg_write(MEM_reg_write)
     .WB_reg_write(WB_reg_write)
+    .alu_src(EX_alu_src)
     .forwardA(forwardA)
     .forwardB(forwardB)
   );
@@ -335,10 +337,10 @@ module cpu(input reset,       // positive reset signal
   );
 
   Mux_4_to_1 forwarding_src2_mux(
-    .x0(EX_alu_src2_mux_out)
+    .x0(EX_rs2_data)
     .x1(WB_reg_write_mux_out)
     .x2(MEM_alu_out)
-    .x3(0)
+    .x3(EX_imm)
     .swch(forwardB)
     .out(forwardB_out)
   );
