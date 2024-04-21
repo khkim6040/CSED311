@@ -3,12 +3,12 @@
 module ALUControlUnit (
     input funct7,
     input[2:0] funct3,
-    input[1:0] ALUOp,
+    input[1:0] alu_op,
     output reg [3:0] alu_ctrl_out
 );
 
     always @(*) begin 
-        case(ALUOp) 
+        case(alu_op) 
             `ALU_CTRL_ADD: begin
                 alu_ctrl_out = `ALU_ADD;
             end

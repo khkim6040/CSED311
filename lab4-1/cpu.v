@@ -42,9 +42,9 @@ module cpu(input reset,       // positive reset signal
   wire[2:0] ID_funct3; // input ID stage modules
   wire ID_funct7; // input ID stage modules
   wire[4:0] ID_reg_rs1; // input ID stage modules
-  wire[4:0] ID_reg_rs1_mux_out; // Output of Mux_2_to_1 module
   wire[4:0] ID_reg_rs2; // input ID stage modules
   wire[4:0] ID_reg_rd; // input ID stage modules
+  wire[4:0] ID_reg_rs1_mux_out; // Output of Mux_2_to_1 module
   // Input Wires Initialization
   assign ID_full_inst = reg_IF_ID_inst;
   assign ID_opcode = reg_IF_ID_inst[6:0];
@@ -58,10 +58,10 @@ module cpu(input reset,       // positive reset signal
   wire[3:0] EX_alu_ctrl_out; // output of ALUControlUnit module
   wire[31:0] EX_alu_src2_mux_out; // output of Mux_2_to_1 module
   wire[31:0] EX_alu_result; // output of ALU module
-  wire forwardA; // input of forwarding_src1_mux
-  wire forwardB; // input of forwarding_src2_mux
-  wire [31:0] forwardA_out; // input of ALU A src
-  wire [31:0] forwardB_out; // input of ALU B src
+  wire [1:0] forwardA; // input of forwarding_src1_mux
+  wire [1:0] forwardB; // input of forwarding_src2_mux
+  wire [31:0] forwardA_mux_out; // input of ALU A src
+  wire [31:0] forwardB_mux_out; // input of ALU B src
   wire[31:0] EX_imm; // input of Mux_2_to_1 module
   wire[31:0] EX_rs1_data; // input of ALU module
   wire[31:0] EX_rs2_data; // input of Mux_2_to_1 module
@@ -216,10 +216,10 @@ module cpu(input reset,       // positive reset signal
 
 // ------------------- ID stage -------------------
 
-  Mux_2_to_1 reg_rs1_mux(
-    .x0(17)
-    .x1(ID_reg_rs1)
-    .swch(ID_is_ecall)
+  Mux_2_to_1 #(.WIDTH(5)) reg_rs1_mux(
+    .x0(17),
+    .x1(ID_reg_rs1),
+    .swch(ID_is_ecall),
     .out(ID_reg_rs1_mux_out)
   );
 
@@ -230,14 +230,14 @@ module cpu(input reset,       // positive reset signal
     .rs2 (ID_reg_rs2),          // input
     .rd (ID_reg_rd),           // input
     .rd_din (WB_reg_write_mux_out),       // input
-    .reg_write (WB_reg_write),    // input
+    .write_enable (WB_reg_write),    // input
     .rs1_dout (ID_rs1_dout),     // output
     .rs2_dout (ID_rs2_dout),      // output
     .print_reg(print_reg)
   );
 
   ControlUnit ctrl_unit (
-    .part_of_inst(ID_opcode) // input
+    .part_of_inst(ID_opcode), // input
     .mem_read(ID_mem_read),      // output
     .mem_to_reg(ID_mem_to_reg),    // output
     .mem_write(ID_mem_write),     // output
@@ -264,7 +264,7 @@ module cpu(input reset,       // positive reset signal
     .reset(reset),  // input
     .instruction(ID_full_inst),  // input
     .EX_rd(EX_reg_rd),   // input
-    .MEM_rd(),  //TODO: connect pin // input
+    .MEM_rd(MEM_reg_rd),  // input
     .mem_read(EX_mem_read),  // input
     .is_ecall(ID_is_ecall),  // input
     .PC_write(PC_write),  // output
@@ -315,48 +315,49 @@ module cpu(input reset,       // positive reset signal
 // ------------------- EX stage -------------------
 
   ForwardingUnit ForwardingUnit(
-    .EX_rs1_index(EX_rs1_index)
-    .EX_rs2_index(EX_rs2_index)
-    .MEM_reg_rd(MEM_reg_rd)
-    .WB_reg_rd(WB_reg_rd)
-    .MEM_reg_write(MEM_reg_write)
-    .WB_reg_write(WB_reg_write)
-    .alu_src(EX_alu_src)
-    .forwardA(forwardA)
+    .EX_rs1_index(EX_rs1_index),
+    .EX_rs2_index(EX_rs2_index),
+    .MEM_reg_rd(MEM_reg_rd),
+    .WB_reg_rd(WB_reg_rd),
+    .MEM_reg_write(MEM_reg_write),
+    .WB_reg_write(WB_reg_write),
+    .alu_src(EX_alu_src),
+    .forwardA(forwardA),
     .forwardB(forwardB)
   );
 
   Mux_4_to_1 forwarding_src1_mux(
-    .x0(EX_rs1_data)
-    .x1(WB_reg_write_mux_out)
-    .x2(MEM_alu_out)
-    .x3(0)
-    .swch(forwardA)
-    .out(forwardA_out)
+    .x0(EX_rs1_data),
+    .x1(WB_reg_write_mux_out),
+    .x2(MEM_alu_out),
+    .x3(0),
+    .swch(forwardA),
+    .out(forwardA_mux_out)
   );
 
   Mux_4_to_1 forwarding_src2_mux(
-    .x0(EX_rs2_data)
-    .x1(WB_reg_write_mux_out)
-    .x2(MEM_alu_out)
-    .x3(EX_imm)
-    .swch(forwardB)
-    .out(forwardB_out)
+    .x0(EX_rs2_data),
+    .x1(WB_reg_write_mux_out),
+    .x2(MEM_alu_out),
+    .x3(EX_imm),
+    .swch(forwardB),
+    .out(forwardB_mux_out)
   );
 
   ALUControlUnit alu_ctrl_unit (
-    .funct7(EX_funct7)  // input
-    .funct3(EX_funct3) // input
-    .alu_op(EX_alu_op) // input
+    .funct7(EX_funct7),  // input
+    .funct3(EX_funct3), // input
+    .alu_op(EX_alu_op), // input
     .alu_ctrl_out(EX_alu_ctrl_out)         // output
   );
 
+  wire alu_bcond; // seems not used in this lab
   ALU alu (
     .alu_ctrl_out(EX_alu_ctrl_out),      // input
-    .alu_in_1(forwardA_out),    // input  
-    .alu_in_2(forwardB_out),    // input
+    .alu_in_1(forwardA_mux_out),    // input  
+    .alu_in_2(forwardB_mux_out),    // input
     .alu_result(EX_alu_result),  // output
-    // .alu_zero()     // output. seems not used in this lab
+    .alu_bcond(alu_bcond)     // output. seems not used in this lab
   );
 
   // Update EX/MEM pipeline registers here

@@ -27,39 +27,17 @@ module HazardDetector (input clk,
     assign is_rs1_used = rs1 != 0 && (opcode == `ARITHMETIC || opcode == `ARITHMETIC_IMM || opcode == `LOAD || opcode == `STORE || opcode == `BRANCH || opcode == `JAL);
     assign is_rs2_used = rs2 != 0 && (opcode == `ARITHMETIC || opcode == `STORE || opcode == `BRANCH);
 
-    always @(posedge clk) begin
-        if(reset) begin
-            stall_cycle_left <= 0;
-        end
-
-        if(stall_cycle_left > 0) begin
-            stall_cycle_left <= stall_cycle_left - 1;
-        end
-
-    end  
-
     // inspect the hazard
     always @(*) begin
         // Load-use hazard
         if(mem_read && ((is_rs1_used && rs1 == EX_rd) || (is_rs2_used && rs2 == EX_rd))) begin
-            stall_cycle_left = 1;
+            PC_write = 0;
+            IF_ID_write = 0;
+            ID_nop_signal = 1;
         end
         // Ecall hazard because ecall comparison executes in ID stage
-        else if(is_ecall) begin
+        else if(is_ecall && ((is_rs1_used && rs1 == EX_rd) || (is_rs2_used && rs2 == EX_rd)) || ((is_rs1_used && rs1 == MEM_rd) || (is_rs2_used && rs2 == MEM_rd))) begin
             // When hazard distance is 1
-            if ((is_rs1_used && rs1 == EX_rd) || (is_rs2_used && rs2 == EX_rd)) begin
-                stall_cycle_left = 2;
-            end
-            // When hazard distance is 2
-            else if ((is_rs1_used && rs1 == MEM_rd) || (is_rs2_used && rs2 == MEM_rd)) begin
-                stall_cycle_left = 1;
-            end
-        end
-    end
-
-    // stall cycle
-    always @(*) begin
-        if(stall_cycle_left > 0) begin
             PC_write = 0;
             IF_ID_write = 0;
             ID_nop_signal = 1;

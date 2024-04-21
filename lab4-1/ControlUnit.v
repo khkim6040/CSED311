@@ -1,11 +1,11 @@
 `include "opcodes.v"
 
-module ControlUnit (input part_of_inst[6:0],
-                    output mem_read,
-                    output mem_to_reg,
-                    output mem_write,
-                    output alu_src,
-                    output reg_write,
+module ControlUnit (input [6:0] part_of_inst,
+                    output reg mem_read,
+                    output reg mem_to_reg,
+                    output reg mem_write,
+                    output reg alu_src,
+                    output reg reg_write,
                     output reg [1:0] alu_op,
                     output reg is_ecall);
 
