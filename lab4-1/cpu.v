@@ -217,8 +217,8 @@ module cpu(input reset,       // positive reset signal
 // ------------------- ID stage -------------------
 
   Mux_2_to_1 #(.WIDTH(5)) reg_rs1_mux(
-    .x0(17),
-    .x1(ID_reg_rs1),
+    .x0(ID_reg_rs1),
+    .x1(17),
     .swch(ID_is_ecall),
     .out(ID_reg_rs1_mux_out)
   );
@@ -228,7 +228,7 @@ module cpu(input reset,       // positive reset signal
     .clk (clk),          // input
     .rs1 (ID_reg_rs1_mux_out),          // input
     .rs2 (ID_reg_rs2),          // input
-    .rd (ID_reg_rd),           // input
+    .rd (WB_reg_rd),           // input
     .rd_din (WB_reg_write_mux_out),       // input
     .write_enable (WB_reg_write),    // input
     .rs1_dout (ID_rs1_dout),     // output
@@ -263,6 +263,7 @@ module cpu(input reset,       // positive reset signal
     .clk(clk),  // input
     .reset(reset),  // input
     .instruction(ID_full_inst),  // input
+    .rs1(ID_reg_rs1_mux_out),  // input
     .EX_rd(EX_reg_rd),   // input
     .MEM_rd(MEM_reg_rd),  // input
     .mem_read(EX_mem_read),  // input
@@ -410,8 +411,8 @@ module cpu(input reset,       // positive reset signal
       reg_MEM_WB_mem_to_reg <= MEM_mem_to_reg;
       reg_MEM_WB_reg_write <= MEM_reg_write;
       reg_MEM_WB_is_halted <= MEM_is_halted;
-      reg_MEM_WB_mem_to_reg_src_1 <= MEM_dmem_dout;
-      reg_MEM_WB_mem_to_reg_src_2 <= MEM_alu_out;
+      reg_MEM_WB_mem_to_reg_src_1 <= MEM_alu_out;
+      reg_MEM_WB_mem_to_reg_src_2 <= MEM_dmem_dout;
       reg_MEM_WB_rd <= MEM_reg_rd;
     end
   end

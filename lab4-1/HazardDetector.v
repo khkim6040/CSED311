@@ -3,6 +3,7 @@
 module HazardDetector (input clk,
                        input reset,
                        input [31:0] instruction,
+                       input [4:0] rs1,
                        input [4:0] EX_rd,
                        input [4:0] MEM_rd,
                        input mem_read,
@@ -12,10 +13,10 @@ module HazardDetector (input clk,
                        output reg ID_nop_signal);
 
     reg [1:0] stall_cycle_left;
-    reg [4:0] rs1, rs2;
+    reg [4:0] rs2;
     reg [6:0] opcode;
     assign opcode = instruction[6:0];
-    assign rs1 = instruction[19:15];
+    // assign rs1 = instruction[19:15];
     assign rs2 = instruction[24:20];
     // Arithmetic uses both rs1, rs2
     // Immediate uses only rs1    
@@ -24,7 +25,7 @@ module HazardDetector (input clk,
     // Branch uses both rs1, rs2
     // Jump uses only rs1
     wire is_rs1_used, is_rs2_used;
-    assign is_rs1_used = rs1 != 0 && (opcode == `ARITHMETIC || opcode == `ARITHMETIC_IMM || opcode == `LOAD || opcode == `STORE || opcode == `BRANCH || opcode == `JAL);
+    assign is_rs1_used = rs1 != 0 && (opcode == `ARITHMETIC || opcode == `ARITHMETIC_IMM || opcode == `LOAD || opcode == `STORE || opcode == `BRANCH || opcode == `JAL || opcode == `ECALL);
     assign is_rs2_used = rs2 != 0 && (opcode == `ARITHMETIC || opcode == `STORE || opcode == `BRANCH);
 
     // inspect the hazard

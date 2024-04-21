@@ -2,8 +2,8 @@
 
 module ALUControlUnit (
     input funct7,
-    input[2:0] funct3,
-    input[1:0] alu_op,
+    input [2:0] funct3,
+    input [1:0] alu_op,
     output reg [3:0] alu_ctrl_out
 );
 

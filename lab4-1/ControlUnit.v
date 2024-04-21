@@ -21,7 +21,7 @@ module ControlUnit (input [6:0] part_of_inst,
         case(part_of_inst)
             `ARITHMETIC: begin
                 reg_write = 1;
-                alu_op = `ALU_CTRL_ADD;
+                alu_op = `ALU_CTRL_ARITH;
             end
             `ARITHMETIC_IMM: begin
                 alu_src = 1;
