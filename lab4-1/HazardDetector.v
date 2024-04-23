@@ -37,7 +37,7 @@ module HazardDetector (input clk,
             ID_nop_signal = 1;
         end
         // Ecall hazard because ecall comparison executes in ID stage
-        else if(is_ecall && ((is_rs1_used && rs1 == EX_rd) || (is_rs2_used && rs2 == EX_rd)) || ((is_rs1_used && rs1 == MEM_rd) || (is_rs2_used && rs2 == MEM_rd))) begin
+        else if(is_ecall && (((is_rs1_used && rs1 == EX_rd) || (is_rs2_used && rs2 == EX_rd)) || ((is_rs1_used && rs1 == MEM_rd) || (is_rs2_used && rs2 == MEM_rd)))) begin
             // When hazard distance is 1
             PC_write = 0;
             IF_ID_write = 0;

@@ -60,8 +60,10 @@ module cpu(input reset,       // positive reset signal
   wire[31:0] EX_alu_result; // output of ALU module
   wire [1:0] forwardA; // input of forwarding_src1_mux
   wire [1:0] forwardB; // input of forwarding_src2_mux
+  wire forwardC; // input of dmem_din_mux
   wire [31:0] forwardA_mux_out; // input of ALU A src
   wire [31:0] forwardB_mux_out; // input of ALU B src
+  wire [31:0] dmem_din_mux_out; // input of DataMemory module
   wire[31:0] EX_imm; // input of Mux_2_to_1 module
   wire[31:0] EX_rs1_data; // input of ALU module
   wire[31:0] EX_rs2_data; // input of Mux_2_to_1 module
@@ -324,7 +326,8 @@ module cpu(input reset,       // positive reset signal
     .WB_reg_write(WB_reg_write),
     .alu_src(EX_alu_src),
     .forwardA(forwardA),
-    .forwardB(forwardB)
+    .forwardB(forwardB),
+    .forwardC(forwardC)
   );
 
   Mux_4_to_1 forwarding_src1_mux(
@@ -343,6 +346,13 @@ module cpu(input reset,       // positive reset signal
     .x3(EX_imm),
     .swch(forwardB),
     .out(forwardB_mux_out)
+  );
+
+  Mux_2_to_1 dmem_din_mux(
+    .x0(EX_rs2_data),
+    .x1(MEM_alu_out),
+    .swch(forwardC),
+    .out(dmem_din_mux_out)
   );
 
   ALUControlUnit alu_ctrl_unit (
@@ -380,7 +390,7 @@ module cpu(input reset,       // positive reset signal
       reg_EX_MEM_reg_write <= EX_reg_write;
       reg_EX_MEM_is_halted <= EX_is_halted;
       reg_EX_MEM_alu_out <= EX_alu_result;
-      reg_EX_MEM_dmem_din <= EX_rs2_data;
+      reg_EX_MEM_dmem_din <= dmem_din_mux_out;
       reg_EX_MEM_rd <= EX_reg_rd;
     end
   end
