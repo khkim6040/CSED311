@@ -12,7 +12,6 @@ module HazardDetector (input clk,
                        output reg IF_ID_write,
                        output reg ID_nop_signal);
 
-    reg [1:0] stall_cycle_left;
     reg [4:0] rs2;
     reg [6:0] opcode;
     assign opcode = instruction[6:0];
