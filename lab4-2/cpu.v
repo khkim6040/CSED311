@@ -204,6 +204,17 @@ module cpu(input reset,       // positive reset signal
     .sum(IF_pc_4_adder_out) // output
   );
 
+  GShare GShare(
+    .clk(clk),
+    .reset(reset),
+    .pc(IF_current_pc),
+    .bcond(bcond), // 확인 필요
+    .branch(branch), // 확인 필요
+    .EX_correct_next_pc(EX_correct_next_pc), // 확인 필요
+    .EX_pc(EX_pc), // 확인 필요
+    .next_pc(/*GShare out*/)
+  );
+
   InstMemory imem(
     .reset(reset),   // input
     .clk(clk),     // input
