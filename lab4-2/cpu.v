@@ -82,7 +82,7 @@ module cpu(input reset,       // positive reset signal
   wire EX_reg_write; // input of EX_MEM pipeline register
   wire [4:0] EX_rs1_index; // input of forwarding unit
   wire [4:0] EX_rs2_index; // input of forwarding unit
-  wire EX_bcond; // input of hazard detector
+  wire [1:0] EX_bcond; // input of hazard detector
   wire [31:0] EX_PC; // input of hazard detector
   wire [31:0] EX_correct_next_pc; // output of hazard detector
   wire EX_PCSrc; // output of hazard detector

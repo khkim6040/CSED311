@@ -8,7 +8,7 @@ module HazardDetector (input clk,
                        input [4:0] MEM_rd,
                        input mem_read,
                        input is_ecall,
-                       input bcond,
+                       input [1:0] bcond,
                        input [31:0] ID_PC,
                        input [31:0] EX_PC,
                        input [31:0] branch_target,
@@ -33,21 +33,21 @@ module HazardDetector (input clk,
     assign is_rs1_used = rs1 != 0 && (opcode == `ARITHMETIC || opcode == `ARITHMETIC_IMM || opcode == `LOAD || opcode == `STORE || opcode == `BRANCH || opcode == `JAL || opcode == `ECALL);
     assign is_rs2_used = rs2 != 0 && (opcode == `ARITHMETIC || opcode == `STORE || opcode == `BRANCH);
 
-    // inspect the hazard
     always @(*) begin
-        // Load-use hazard
+        // Data Hazard: Load-use hazard
         if(mem_read && ((is_rs1_used && rs1 == EX_rd) || (is_rs2_used && rs2 == EX_rd))) begin
             PC_write = 0;
             IF_ID_write = 0;
             ID_nop_signal = 1;
         end
-        // Ecall hazard because ecall comparison executes in ID stage
+        // Data Hazard: Ecall hazard because ecall comparison executes in ID stage
         else if(is_ecall && (((is_rs1_used && rs1 == EX_rd) || (is_rs2_used && rs2 == EX_rd)) || ((is_rs1_used && rs1 == MEM_rd) || (is_rs2_used && rs2 == MEM_rd)))) begin
             // When hazard distance is 1
             PC_write = 0;
             IF_ID_write = 0;
             ID_nop_signal = 1;
         end
+        // Control Hazard: Branch hazard
         else begin
             PC_write = 1;
             IF_ID_write = 1;
