@@ -8,9 +8,15 @@ module HazardDetector (input clk,
                        input [4:0] MEM_rd,
                        input mem_read,
                        input is_ecall,
+                       input bcond,
+                       input [31:0] ID_PC,
+                       input [31:0] EX_PC,
+                       input [31:0] branch_target,
                        output reg PC_write,
                        output reg IF_ID_write,
-                       output reg ID_nop_signal);
+                       output reg ID_nop_signal,
+                       output reg EX_correct_next_pc,
+                       output reg EX_PCSrc);
 
     reg [4:0] rs2;
     reg [6:0] opcode;

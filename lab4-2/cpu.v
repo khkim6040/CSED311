@@ -290,7 +290,7 @@ module cpu(input reset,       // positive reset signal
     .bcond(EX_bcond), // input
     .EX_PC(EX_PC),  // input
     .ID_PC(ID_PC),  // input
-    .EX_alu_result(EX_alu_result),  // input
+    .branch_target(EX_alu_result),  // input
     .PC_write(PC_write),  // output
     .IF_ID_write(IF_ID_write),  // output
     .ID_nop_signal(ID_nop_signal)  // output
