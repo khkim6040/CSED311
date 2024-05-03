@@ -18,7 +18,8 @@ module cpu(input reset,       // positive reset signal
   // Register update signals
   wire PC_write; // output of HazardDetector module, for PC module
   wire IF_ID_write; // output of HazardDetector module, for IF/ID pipeline register
-  wire ID_nop_signal; // output of HazardDetector module, for ID/EX pipeline register
+  wire IF_ID_nop_signal; // output of HazardDetector module. Flush IF/ID pipeline register
+  wire ID_EX_nop_signal; // output of HazardDetector module. Flush ID/EX pipeline register
 
   // IF stage wires
   wire[31:0] IF_current_pc; // output of PC module
@@ -223,12 +224,14 @@ module cpu(input reset,       // positive reset signal
 
   // Update IF/ID pipeline registers here
   always @(posedge clk) begin
-    if (reset) begin
+    if (reset || IF_ID_nop_signal) begin
       reg_IF_ID_inst <= 32'b0; 
+      reg_IF_ID_PC <= 32'b0;
     end
     else begin
       if(IF_ID_write) begin
-        reg_IF_ID_inst <= IF_imem_out; // latch 오류 안 나려나...
+        reg_IF_ID_inst <= IF_imem_out;
+        reg_IF_ID_PC <= IF_current_pc; 
       end
     end
   end
@@ -293,15 +296,16 @@ module cpu(input reset,       // positive reset signal
     .branch_target(EX_alu_result),  // input
     .PC_write(PC_write),  // output
     .IF_ID_write(IF_ID_write),  // output
-    .ID_nop_signal(ID_nop_signal)  // output
-    .EX_correct_next_pc(EX_correct_next_pc)  // output
+    .IF_ID_nop_signal(IF_ID_nop_signal),  // output
+    .ID_EX_nop_signal(ID_EX_nop_signal),  // output
+    .EX_correct_next_pc(EX_correct_next_pc),  // output
     .EX_PCSrc(EX_PCSrc)  // output
   );
 
   // Update ID/EX pipeline registers here
   always @(posedge clk) begin
     // no-op due to Data Hazard is performed here
-    if (reset || ID_nop_signal) begin
+    if (reset || ID_EX_nop_signal) begin
       // TODO: isn't it enough to reset only signals not registers for nop signal?
       reg_ID_EX_alu_op <= 2'b0;
       reg_ID_EX_alu_src <= 1'b0;
@@ -318,6 +322,7 @@ module cpu(input reset,       // positive reset signal
       reg_ID_EX_funct3 <= 3'b0;
       reg_ID_EX_rs1_index <= 5'b0;
       reg_ID_EX_rs2_index <= 5'b0;
+      reg_ID_EX_PC <= 32'b0;
     end
     else begin
       reg_ID_EX_alu_op <= ID_alu_op;
