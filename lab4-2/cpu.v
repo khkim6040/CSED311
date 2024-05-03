@@ -46,6 +46,7 @@ module cpu(input reset,       // positive reset signal
   wire[4:0] ID_reg_rs2; // input ID stage modules
   wire[4:0] ID_reg_rd; // input ID stage modules
   wire[4:0] ID_reg_rs1_mux_out; // Output of Mux_2_to_1 module
+  wire[31:0] ID_PC; // input of HazardDetector module
   // Input Wires Initialization
   assign ID_full_inst = reg_IF_ID_inst;
   assign ID_opcode = reg_IF_ID_inst[6:0];
@@ -54,6 +55,7 @@ module cpu(input reset,       // positive reset signal
   assign ID_reg_rs1 = reg_IF_ID_inst[19:15];
   assign ID_reg_rs2 = reg_IF_ID_inst[24:20];
   assign ID_reg_rd = reg_IF_ID_inst[11:7];
+  assign ID_PC = reg_IF_ID_PC;
 
   // EX stage wires 
   wire[3:0] EX_alu_ctrl_out; // output of ALUControlUnit module
@@ -80,6 +82,10 @@ module cpu(input reset,       // positive reset signal
   wire EX_reg_write; // input of EX_MEM pipeline register
   wire [4:0] EX_rs1_index; // input of forwarding unit
   wire [4:0] EX_rs2_index; // input of forwarding unit
+  wire EX_bcond; // input of hazard detector
+  wire [31:0] EX_PC; // input of hazard detector
+  wire [31:0] EX_correct_next_pc; // output of hazard detector
+  wire EX_PCSrc; // output of hazard detector
   // Input Wires Initialization
   assign EX_imm = reg_ID_EX_imm;
   assign EX_rs1_data = reg_ID_EX_rs1_data;
@@ -96,6 +102,8 @@ module cpu(input reset,       // positive reset signal
   assign EX_reg_write = reg_ID_EX_reg_write;
   assign EX_rs1_index = reg_ID_EX_rs1_index;
   assign EX_rs2_index = reg_ID_EX_rs2_index;
+  assign EX_PC = reg_ID_EX_PC;
+
 
   // MEM stage wires
   wire[31:0] MEM_dmem_dout; // output of DataMemory module
@@ -139,6 +147,7 @@ module cpu(input reset,       // positive reset signal
   // 2. You might not need registers described below
   /***** IF/ID pipeline registers *****/
   reg [31:0] reg_IF_ID_inst;           // Full instruction
+  reg [31:0] reg_IF_ID_PC;
   /***** ID/EX pipeline registers *****/
   // From the control unit
   reg[1:0] reg_ID_EX_alu_op;         // will be used in EX stage
@@ -157,6 +166,7 @@ module cpu(input reset,       // positive reset signal
   reg [2:0] reg_ID_EX_funct3;
   reg [4:0] reg_ID_EX_rs1_index;
   reg [4:0] reg_ID_EX_rs2_index;
+  reg [31:0] reg_ID_EX_PC; 
 
   /***** EX/MEM pipeline registers *****/
   // From the control unit
@@ -277,9 +287,15 @@ module cpu(input reset,       // positive reset signal
     .MEM_rd(MEM_reg_rd),  // input
     .mem_read(EX_mem_read),  // input
     .is_ecall(ID_is_ecall),  // input
+    .bcond(EX_bcond), // input
+    .EX_PC(EX_PC),  // input
+    .ID_PC(ID_PC),  // input
+    .EX_alu_result(EX_alu_result),  // input
     .PC_write(PC_write),  // output
     .IF_ID_write(IF_ID_write),  // output
     .ID_nop_signal(ID_nop_signal)  // output
+    .EX_correct_next_pc(EX_correct_next_pc)  // output
+    .EX_PCSrc(EX_PCSrc)  // output
   );
 
   // Update ID/EX pipeline registers here
@@ -369,13 +385,12 @@ module cpu(input reset,       // positive reset signal
     .alu_ctrl_out(EX_alu_ctrl_out)         // output
   );
 
-  wire alu_bcond; // seems not used in this lab
   ALU alu (
     .alu_ctrl_out(EX_alu_ctrl_out),      // input
     .alu_in_1(forwardA_mux_out),    // input  
     .alu_in_2(forwardB_mux_out),    // input
     .alu_result(EX_alu_result),  // output
-    .alu_bcond(alu_bcond)     // output. seems not used in this lab
+    .alu_bcond(EX_bcond)     // output
   );
 
   // Update EX/MEM pipeline registers here
