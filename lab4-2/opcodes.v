@@ -66,6 +66,6 @@
 `define ALU_BLT    4'b1010
 `define ALU_BGE    4'b1011
 
-`define BCOND_DEFAULT   2`b00
-`define BCOND_TAKEN     2`b01
-`define BCOND_NOT_TAKEN 2`b10
+`define BCOND_DEFAULT   2'b00
+`define BCOND_TAKEN     2'b01
+`define BCOND_NOT_TAKEN 2'b10
