@@ -24,6 +24,7 @@ module cpu(input reset,       // positive reset signal
   wire[31:0] IF_current_pc; // output of PC module
   wire[31:0] IF_imem_out; // output of InstMemory module
   wire[31:0] IF_pc_4_adder_out; // output of Adder module
+  wire[31:0] IF_next_pc_mux_out; // output of Mux_2_to_1 module
 
   // ID stage wires
   wire[31:0] ID_rs1_dout; // output of RegisterFile module
@@ -182,11 +183,17 @@ module cpu(input reset,       // positive reset signal
 
 
 // ------------------- IF stage -------------------
+  Mux_2_to_1 next_pc_mux(
+    .x0(/*GShare out*/),  // input
+    .x1(EX_correct_next_pc),  // input
+    .swch(EX_PCSrc),  // input
+    .out(IF_next_pc_mux_out)  // output
+  );
   // PC must be updated on the rising edge (positive edge) of the clock.
   PC pc(
     .reset(reset),       // input (Use reset to initialize PC. Initial value must be 0)
     .clk(clk),         // input
-    .next_pc(IF_pc_4_adder_out),     // input
+    .next_pc(IF_next_pc_mux_out),     // input
     .pc_write_signal(PC_write),     // input
     .current_pc(IF_current_pc)   // output
   );
