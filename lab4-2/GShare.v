@@ -18,9 +18,11 @@ module GShare(
     wire [4:0] index;
     wire [24:0] BTB_tag;
     wire [4:0] EX_index; 
+    wire [24:0] EX_tag;
     wire [3:0] unused;
     wire [31:0] predicted_pc;
     wire [4:0] PTH_index;
+    wire [4:0] updated_PTH_index;
     wire tag_matched;
     wire PHT_taken;
 
@@ -28,9 +30,13 @@ module GShare(
     assign index = pc[6:2];
     assign BTB_tag = BTB[index][56:32];
     assign EX_index = EX_pc[6:2];
+    assign EX_tag = EX_pc[31:7];
+
     assign unused = {pc[1:0], EX_pc[1:0]};
     assign predicted_pc = BTB[index][31:0];
     assign PTH_index = BHSR^index;
+    assign updated_PTH_index = BHSR^EX_index;
+
     assign tag_matched = tag == BTB_tag;
     assign PHT_taken = PHT[PTH_index] > 1;
 
@@ -46,15 +52,15 @@ module GShare(
             BHSR <= 0;
         end
         else if (bcond == `BCOND_TAKEN || bcond == `BCOND_NOT_TAKEN) begin
-            BTB[EX_index] <= {BTB_tag, EX_correct_next_pc};
-            BHSR <= (BHSR << 1);
-            BHSR[0] <= bcond[0]; // 2bits to 1bit
-            if (bcond == `BCOND_TAKEN & PHT[PTH_index] < 3)
-                PHT[PTH_index] <= (PHT[PTH_index]+1);
-            else if(bcond == `BCOND_NOT_TAKEN & PHT[PTH_index] > 0) 
-                PHT[PTH_index] <= (PHT[PTH_index]-1);
+            if (bcond == `BCOND_TAKEN && PHT[updated_PTH_index] < 3)
+                PHT[updated_PTH_index] <= (PHT[updated_PTH_index]+1);
+            else if(bcond == `BCOND_NOT_TAKEN && PHT[updated_PTH_index] > 0) 
+                PHT[updated_PTH_index] <= (PHT[updated_PTH_index]-1);
             else
                 temp <= 0;
+            BTB[EX_index] <= {EX_tag, EX_correct_next_pc};
+            BHSR[0] <= bcond[0]; // 2bits to 1bit
+            BHSR <= (BHSR << 1);
         end
         else 
             temp <= 0;

@@ -88,6 +88,7 @@ module cpu(input reset,       // positive reset signal
   wire [31:0] EX_PC; // input of hazard detector
   wire [31:0] EX_correct_next_pc; // output of hazard detector
   wire EX_PCSrc; // output of hazard detector
+  wire [31:0] EX_target_address_adder_out; // output of target address Adder module
   // Input Wires Initialization
   assign EX_imm = reg_ID_EX_imm;
   assign EX_rs1_data = reg_ID_EX_rs1_data;
@@ -304,7 +305,7 @@ module cpu(input reset,       // positive reset signal
     .bcond(EX_bcond), // input
     .EX_PC(EX_PC),  // input
     .ID_PC(ID_PC),  // input
-    .branch_target(EX_alu_result),  // input
+    .branch_target(EX_target_address_adder_out),  // input
     .PC_write(PC_write),  // output
     .IF_ID_write(IF_ID_write),  // output
     .IF_ID_nop_signal(IF_ID_nop_signal),  // output
@@ -410,6 +411,12 @@ module cpu(input reset,       // positive reset signal
     .alu_in_2(forwardB_mux_out),    // input
     .alu_result(EX_alu_result),  // output
     .alu_bcond(EX_bcond)     // output
+  );
+
+  Adder tartget_address_adder(
+    .x0(EX_PC),  // input
+    .x1(EX_imm),  // input
+    .sum(EX_target_address_adder_out) // output
   );
 
   // Update EX/MEM pipeline registers here
