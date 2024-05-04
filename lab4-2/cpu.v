@@ -1,3 +1,5 @@
+`include "opcodes.v"
+
 // Submit this file with other files you created.
 // Do not touch port declarations of the module 'CPU'.
 
@@ -22,7 +24,7 @@ module cpu(input reset,       // positive reset signal
   wire ID_EX_nop_signal; // output of HazardDetector module. Flush ID/EX pipeline register
 
   // IF stage wires
-  wire[31:0] IF_current_pc; // output of PC module
+  wire[31:0] IF_PC; // output of PC module
   wire[31:0] IF_imem_out; // output of InstMemory module
   wire[31:0] IF_pc_4_adder_out; // output of Adder module
   wire[31:0] IF_next_pc_mux_out; // output of Mux_2_to_1 module
@@ -35,7 +37,7 @@ module cpu(input reset,       // positive reset signal
   wire ID_is_ecall; // output of ControlUnit module
   wire ID_is_halted; // output of HaltDetector module
   wire ID_reg_write; // output of ControlUnit module
-  wire ID_mem_to_reg; // output of ControlUnit module
+  wire[1:0] ID_mem_to_reg; // output of ControlUnit module
   wire ID_mem_read; // output of ControlUnit module
   wire ID_mem_write; // output of ControlUnit module
   wire[1:0] ID_alu_op; // output of ControlUnit module
@@ -49,6 +51,7 @@ module cpu(input reset,       // positive reset signal
   wire[4:0] ID_reg_rd; // input ID stage modules
   wire[4:0] ID_reg_rs1_mux_out; // Output of Mux_2_to_1 module
   wire[31:0] ID_PC; // input of HazardDetector module
+  wire[1:0] ID_jump_signal; // output of ControlUnit module
   // Input Wires Initialization
   assign ID_full_inst = reg_IF_ID_inst;
   assign ID_opcode = reg_IF_ID_inst[6:0];
@@ -77,7 +80,7 @@ module cpu(input reset,       // positive reset signal
   wire EX_funct7; // input of ALUControlUnit module
   wire [2:0] EX_funct3; // input of ALUControlUnit module
   wire EX_mem_read; // input of EX_MEM pipeline register
-  wire EX_mem_to_reg; // input of EX_MEM pipeline register
+  wire[1:0] EX_mem_to_reg; // input of EX_MEM pipeline register
   wire EX_mem_write; // input of EX_MEM pipeline register
   wire [4:0] EX_reg_rd; // input of EX_MEM pipeline register
   wire EX_is_halted; // input of EX_MEM pipeline register
@@ -88,7 +91,9 @@ module cpu(input reset,       // positive reset signal
   wire [31:0] EX_PC; // input of hazard detector
   wire [31:0] EX_correct_next_pc; // output of hazard detector
   wire EX_PCSrc; // output of hazard detector
-  wire [31:0] EX_target_address_adder_out; // output of target address Adder module
+  wire [31:0] EX_target_pc_adder_out; // output of target address Adder module
+  wire[1:0] EX_jump_signal; // output of ControlUnit module
+  wire[31:0] EX_target_pc_x0_mux_out; // output of Mux_2_to_1 module
   // Input Wires Initialization
   assign EX_imm = reg_ID_EX_imm;
   assign EX_rs1_data = reg_ID_EX_rs1_data;
@@ -106,6 +111,7 @@ module cpu(input reset,       // positive reset signal
   assign EX_rs1_index = reg_ID_EX_rs1_index;
   assign EX_rs2_index = reg_ID_EX_rs2_index;
   assign EX_PC = reg_ID_EX_PC;
+  assign EX_jump_signal = reg_ID_EX_jump_signal;
 
 
   // MEM stage wires
@@ -114,11 +120,11 @@ module cpu(input reset,       // positive reset signal
   wire[31:0] MEM_dmem_din; // input of DataMemory module
   wire MEM_mem_write; // input of DataMemory module
   wire MEM_mem_read; // input of DataMemory module
-  // wire MEM_is_branch; // seems not used in this lab
-  wire MEM_mem_to_reg; // input of MEM_WB pipeline register
+  wire[1:0] MEM_mem_to_reg; // input of MEM_WB pipeline register
   wire MEM_reg_write; // input of MEM_WB pipeline register
   wire MEM_is_halted; // input of MEM_WB pipeline register
-  wire [4:0] MEM_reg_rd; // input of MEM_WB pipeline register
+  wire[4:0] MEM_reg_rd; // input of MEM_WB pipeline register
+  wire[31:0] MEM_PC; 
   // Input Wires Initialization
   assign MEM_alu_out = reg_EX_MEM_alu_out;
   assign MEM_dmem_din = reg_EX_MEM_dmem_din;
@@ -128,20 +134,23 @@ module cpu(input reset,       // positive reset signal
   assign MEM_reg_write = reg_EX_MEM_reg_write;
   assign MEM_is_halted = reg_EX_MEM_is_halted;
   assign MEM_reg_rd = reg_EX_MEM_rd;
+  assign MEM_PC = reg_EX_MEM_PC;
 
   // WB stage wires
   wire[31:0] WB_reg_write_mux_out; // output of Mux_2_to_1 module
   wire[31:0] WB_mem_to_reg_src_1; // input of Mux_2_to_1 module
   wire[31:0] WB_mem_to_reg_src_2; // input of Mux_2_to_1 module
-  wire WB_mem_to_reg; // input of Mux_2_to_1 module
+  wire[1:0] WB_mem_to_reg; // input of Mux_2_to_1 module
   wire WB_reg_write; // input of MEM_WB pipeline register
   wire [4:0] WB_reg_rd;
+  wire[31:0] WB_PC; 
   // Input Wires Initialization
   assign WB_mem_to_reg_src_1 = reg_MEM_WB_mem_to_reg_src_1;
   assign WB_mem_to_reg_src_2 = reg_MEM_WB_mem_to_reg_src_2;
   assign WB_mem_to_reg = reg_MEM_WB_mem_to_reg;
   assign WB_reg_write = reg_MEM_WB_reg_write;
   assign WB_reg_rd = reg_MEM_WB_rd;
+  assign WB_PC = reg_MEM_WB_PC;
 
   /***** Register declarations *****/
   // You need to modify the width of registers
@@ -157,9 +166,10 @@ module cpu(input reset,       // positive reset signal
   reg reg_ID_EX_alu_src;        // will be used in EX stage
   reg reg_ID_EX_mem_write;      // will be used in MEM stage
   reg reg_ID_EX_mem_read;       // will be used in MEM stage
-  reg reg_ID_EX_mem_to_reg;     // will be used in WB stage
+  reg[1:0] reg_ID_EX_mem_to_reg;     // will be used in WB stage
   reg reg_ID_EX_reg_write;      // will be used in WB stage
   reg reg_ID_EX_is_halted;       // will be used in WB stage
+  reg[1:0] reg_ID_EX_jump_signal;     // will be used in EX stage
   // From others
   reg[31:0] reg_ID_EX_rs1_data;
   reg[31:0] reg_ID_EX_rs2_data;
@@ -175,24 +185,26 @@ module cpu(input reset,       // positive reset signal
   // From the control unit
   reg reg_EX_MEM_mem_write;     // will be used in MEM stage
   reg reg_EX_MEM_mem_read;      // will be used in MEM stage
-  // reg reg_EX_MEM_is_branch;     // will be used in MEM stage, seems not used in this lab
-  reg reg_EX_MEM_mem_to_reg;    // will be used in WB stage
+  reg[1:0] reg_EX_MEM_mem_to_reg;    // will be used in WB stage
   reg reg_EX_MEM_reg_write;     // will be used in WB stage
   reg reg_EX_MEM_is_halted;      // will be used in WB stage
   // From others
   reg[31:0] reg_EX_MEM_alu_out;
   reg[31:0] reg_EX_MEM_dmem_din;
   reg[4:0] reg_EX_MEM_rd;
+  reg[31:0] reg_EX_MEM_PC;
 
   /***** MEM/WB pipeline registers *****/
   // From the control unit
-  reg reg_MEM_WB_mem_to_reg;    // will be used in WB stage
+  reg[1:0] reg_MEM_WB_mem_to_reg;    // will be used in WB stage
   reg reg_MEM_WB_reg_write;     // will be used in WB stage
   reg reg_MEM_WB_is_halted;      // will be used in WB stage
   // From others
   reg[31:0] reg_MEM_WB_mem_to_reg_src_1;
   reg[31:0] reg_MEM_WB_mem_to_reg_src_2;
   reg[4:0] reg_MEM_WB_rd;
+  reg[31:0] reg_MEM_WB_PC;
+
 
 
 // ------------------- IF stage -------------------
@@ -208,11 +220,11 @@ module cpu(input reset,       // positive reset signal
     .clk(clk),         // input
     .next_pc(IF_next_pc_mux_out),     // input
     .pc_write_signal(PC_write),     // input
-    .current_pc(IF_current_pc)   // output
+    .current_pc(IF_PC)   // output
   );
 
   Adder pc_4_adder(
-    .x0(IF_current_pc),  // input
+    .x0(IF_PC),  // input
     .x1(4),  // input
     .sum(IF_pc_4_adder_out) // output
   );
@@ -220,7 +232,7 @@ module cpu(input reset,       // positive reset signal
   GShare GShare(
     .clk(clk),
     .reset(reset),
-    .pc(IF_current_pc),
+    .pc(IF_PC),
     .bcond(EX_bcond), // 확인 필요
     .EX_correct_next_pc(EX_correct_next_pc), // 확인 필요
     .EX_pc(EX_PC), // input
@@ -230,7 +242,7 @@ module cpu(input reset,       // positive reset signal
   InstMemory imem(
     .reset(reset),   // input
     .clk(clk),     // input
-    .addr(IF_current_pc),    // input
+    .addr(IF_PC),    // input
     .dout(IF_imem_out)     // output
   );
 
@@ -243,7 +255,7 @@ module cpu(input reset,       // positive reset signal
     else begin
       if(IF_ID_write) begin
         reg_IF_ID_inst <= IF_imem_out;
-        reg_IF_ID_PC <= IF_current_pc; 
+        reg_IF_ID_PC <= IF_PC; 
       end
     end
   end
@@ -277,9 +289,9 @@ module cpu(input reset,       // positive reset signal
     .mem_write(ID_mem_write),     // output
     .alu_src(ID_alu_src),       // output
     .reg_write(ID_reg_write),  // output
-    // .pc_to_reg(),     // output. seems not used in this lab
     .alu_op(ID_alu_op),        // output
-    .is_ecall(ID_is_ecall)       // output (ecall inst)
+    .is_ecall(ID_is_ecall),       // output (ecall inst)
+    .jump_signal(ID_jump_signal)  // output
   );
 
   ImmediateGenerator imm_gen(
@@ -305,7 +317,7 @@ module cpu(input reset,       // positive reset signal
     .bcond(EX_bcond), // input
     .EX_PC(EX_PC),  // input
     .ID_PC(ID_PC),  // input
-    .branch_target(EX_target_address_adder_out),  // input
+    .target_pc(EX_target_pc_adder_out),  // input
     .PC_write(PC_write),  // output
     .IF_ID_write(IF_ID_write),  // output
     .IF_ID_nop_signal(IF_ID_nop_signal),  // output
@@ -318,12 +330,11 @@ module cpu(input reset,       // positive reset signal
   always @(posedge clk) begin
     // no-op due to Data Hazard is performed here
     if (reset || ID_EX_nop_signal) begin
-      // TODO: isn't it enough to reset only signals not registers for nop signal?
       reg_ID_EX_alu_op <= 2'b0;
       reg_ID_EX_alu_src <= 1'b0;
       reg_ID_EX_mem_write <= 1'b0;
       reg_ID_EX_mem_read <= 1'b0;
-      reg_ID_EX_mem_to_reg <= 1'b0;
+      reg_ID_EX_mem_to_reg <= 2'b0;
       reg_ID_EX_reg_write <= 1'b0;
       reg_ID_EX_is_halted <= 1'b0;
       reg_ID_EX_rs1_data <= 32'b0;
@@ -335,6 +346,7 @@ module cpu(input reset,       // positive reset signal
       reg_ID_EX_rs1_index <= 5'b0;
       reg_ID_EX_rs2_index <= 5'b0;
       reg_ID_EX_PC <= 32'b0;
+      reg_ID_EX_jump_signal <= `JUMP_DEFAULT;
     end
     else begin
       reg_ID_EX_alu_op <= ID_alu_op;
@@ -353,6 +365,7 @@ module cpu(input reset,       // positive reset signal
       reg_ID_EX_rs1_index <= ID_reg_rs1_mux_out;
       reg_ID_EX_rs2_index <= ID_reg_rs2;
       reg_ID_EX_PC <= ID_PC;
+      reg_ID_EX_jump_signal <= ID_jump_signal;
     end
   end
 
@@ -409,14 +422,22 @@ module cpu(input reset,       // positive reset signal
     .alu_ctrl_out(EX_alu_ctrl_out),      // input
     .alu_in_1(forwardA_mux_out),    // input  
     .alu_in_2(forwardB_mux_out),    // input
+    .jump_signal(EX_jump_signal),  // input
     .alu_result(EX_alu_result),  // output
     .alu_bcond(EX_bcond)     // output
   );
 
-  Adder tartget_address_adder(
+  Mux_2_to_1 target_pc_x0_mux(
     .x0(EX_PC),  // input
+    .x1(EX_rs1_data),  // input
+    .swch(EX_jump_signal[0]),  // input
+    .out(EX_target_pc_x0_mux_out)  // output
+  );
+
+  Adder tartget_pc_adder(
+    .x0(EX_target_pc_x0_mux_out),  // input
     .x1(EX_imm),  // input
-    .sum(EX_target_address_adder_out) // output
+    .sum(EX_target_pc_adder_out) // output
   );
 
   // Update EX/MEM pipeline registers here
@@ -424,12 +445,13 @@ module cpu(input reset,       // positive reset signal
     if (reset) begin
       reg_EX_MEM_mem_write <= 1'b0;
       reg_EX_MEM_mem_read <= 1'b0;
-      reg_EX_MEM_mem_to_reg <= 1'b0;
+      reg_EX_MEM_mem_to_reg <= 2'b0;
       reg_EX_MEM_reg_write <= 1'b0;
       reg_EX_MEM_is_halted <= 1'b0;
       reg_EX_MEM_alu_out <= 32'b0;
       reg_EX_MEM_dmem_din <= 32'b0;
       reg_EX_MEM_rd <= 5'b0;
+      reg_EX_MEM_PC <= 32'b0;
     end
     else begin
       reg_EX_MEM_mem_write <= EX_mem_write;
@@ -440,6 +462,7 @@ module cpu(input reset,       // positive reset signal
       reg_EX_MEM_alu_out <= EX_alu_result;
       reg_EX_MEM_dmem_din <= dmem_din_mux_out;
       reg_EX_MEM_rd <= EX_reg_rd;
+      reg_EX_MEM_PC <= EX_PC;
     end
   end
 
@@ -458,12 +481,13 @@ module cpu(input reset,       // positive reset signal
   // Update MEM/WB pipeline registers here
   always @(posedge clk) begin
     if (reset) begin
-      reg_MEM_WB_mem_to_reg <= 1'b0;
+      reg_MEM_WB_mem_to_reg <= 2'b0;
       reg_MEM_WB_reg_write <= 1'b0;
       reg_MEM_WB_is_halted <= 1'b0;
       reg_MEM_WB_mem_to_reg_src_1 <= 32'b0;
       reg_MEM_WB_mem_to_reg_src_2 <= 32'b0;
       reg_MEM_WB_rd <= 5'b0;
+      reg_MEM_WB_PC <= 32'b0;
     end
     else begin
       reg_MEM_WB_mem_to_reg <= MEM_mem_to_reg;
@@ -472,15 +496,18 @@ module cpu(input reset,       // positive reset signal
       reg_MEM_WB_mem_to_reg_src_1 <= MEM_alu_out;
       reg_MEM_WB_mem_to_reg_src_2 <= MEM_dmem_dout;
       reg_MEM_WB_rd <= MEM_reg_rd;
+      reg_MEM_WB_PC <= MEM_PC;
     end
   end
 
 
 // ------------------- WB stage -------------------
   
-  Mux_2_to_1 reg_write_mux(
+  Mux_4_to_1 reg_write_mux(
     .x0(WB_mem_to_reg_src_1),        // input
     .x1(WB_mem_to_reg_src_2),        // input
+    .x2(WB_PC+4),        // input
+    .x3(0),        // input
     .swch(WB_mem_to_reg),         // input
     .out(WB_reg_write_mux_out)          // output
   );

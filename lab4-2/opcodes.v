@@ -69,3 +69,8 @@
 `define BCOND_NOT_TAKEN 2'b00
 `define BCOND_TAKEN     2'b01
 `define BCOND_DEFAULT   2'b10
+`define BCOND_JUMP      2'b11
+
+`define JUMP_JAL        2'b00
+`define JUMP_JALR       2'b01
+`define JUMP_DEFAULT    2'b10

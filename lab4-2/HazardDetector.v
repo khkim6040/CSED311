@@ -11,7 +11,7 @@ module HazardDetector (input clk,
                        input [1:0] bcond,
                        input [31:0] ID_PC,
                        input [31:0] EX_PC,
-                       input [31:0] branch_target,
+                       input [31:0] target_pc,
                        output reg PC_write,
                        output reg IF_ID_write,
                        output reg ID_EX_nop_signal,
@@ -56,16 +56,16 @@ module HazardDetector (input clk,
             ID_EX_nop_signal = 1;
         end
         // Control Hazard: Branch hazard
-        else if(bcond == `BCOND_TAKEN && ID_PC == branch_target) begin
+        else if(bcond == `BCOND_TAKEN && ID_PC == target_pc) begin
             // Correct PC prediction, nothing to do
         end
         else if(bcond == `BCOND_NOT_TAKEN && ID_PC == EX_PC+4) begin
             // Correct PC prediction, nothing to do
         end
-        else if(bcond == `BCOND_TAKEN && ID_PC != branch_target) begin
+        else if(bcond == `BCOND_TAKEN && ID_PC != target_pc) begin
             IF_ID_nop_signal = 1;
             ID_EX_nop_signal = 1;
-            EX_correct_next_pc = branch_target;
+            EX_correct_next_pc = target_pc;
             EX_PCSrc = 1;
         end
         else if(bcond == `BCOND_NOT_TAKEN && ID_PC != EX_PC+4) begin
@@ -73,6 +73,15 @@ module HazardDetector (input clk,
             ID_EX_nop_signal = 1;
             EX_correct_next_pc = EX_PC+4;
             EX_PCSrc = 1;
+        end
+        else if(bcond == `BCOND_JUMP && ID_PC != target_pc) begin
+            IF_ID_nop_signal = 1;
+            ID_EX_nop_signal = 1;
+            EX_correct_next_pc = target_pc;
+            EX_PCSrc = 1;
+        end
+        else if(bcond == `BCOND_JUMP && ID_PC == target_pc) begin
+            // Correct PC prediction, nothing to do
         end
         else begin
             PC_write = 1;
