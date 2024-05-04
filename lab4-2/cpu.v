@@ -351,6 +351,7 @@ module cpu(input reset,       // positive reset signal
       reg_ID_EX_funct3 <= ID_funct3;
       reg_ID_EX_rs1_index <= ID_reg_rs1_mux_out;
       reg_ID_EX_rs2_index <= ID_reg_rs2;
+      reg_ID_EX_PC <= ID_PC;
     end
   end
 
