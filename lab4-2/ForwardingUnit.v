@@ -8,7 +8,7 @@ module ForwardingUnit(
     input alu_src,
     output reg [1:0] forwardA,
     output reg [1:0] forwardB,
-    output reg forwardC);
+    output reg [1:0] forwardC);
 
     always @(*) begin
         if ((EX_rs1_index != 0) && (EX_rs1_index == MEM_reg_rd) && MEM_reg_write) 
@@ -27,7 +27,10 @@ module ForwardingUnit(
         else
             forwardB = 0; // Register value
 
-        if (MEM_reg_rd == EX_rs2_index) 
+        
+        if(WB_reg_rd == EX_rs2_index) // lw -> sw
+            forwardC = 2;
+        else if (MEM_reg_rd == EX_rs2_index) // R-type -> sw
             forwardC = 1;
         else
             forwardC = 0;

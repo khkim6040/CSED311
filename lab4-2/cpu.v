@@ -26,6 +26,7 @@ module cpu(input reset,       // positive reset signal
   wire[31:0] IF_imem_out; // output of InstMemory module
   wire[31:0] IF_pc_4_adder_out; // output of Adder module
   wire[31:0] IF_next_pc_mux_out; // output of Mux_2_to_1 module
+  wire[31:0] IF_GShare_out; // output of GShare module
 
   // ID stage wires
   wire[31:0] ID_rs1_dout; // output of RegisterFile module
@@ -64,7 +65,7 @@ module cpu(input reset,       // positive reset signal
   wire[31:0] EX_alu_result; // output of ALU module
   wire [1:0] forwardA; // input of forwarding_src1_mux
   wire [1:0] forwardB; // input of forwarding_src2_mux
-  wire forwardC; // input of dmem_din_mux
+  wire [1:0] forwardC; // input of dmem_din_mux
   wire [31:0] forwardA_mux_out; // input of ALU A src
   wire [31:0] forwardB_mux_out; // input of ALU B src
   wire [31:0] dmem_din_mux_out; // input of DataMemory module
@@ -195,7 +196,7 @@ module cpu(input reset,       // positive reset signal
 
 // ------------------- IF stage -------------------
   Mux_2_to_1 next_pc_mux(
-    .x0(/*GShare out*/),  // input
+    .x0(IF_GShare_out),  // input
     .x1(EX_correct_next_pc),  // input
     .swch(EX_PCSrc),  // input
     .out(IF_next_pc_mux_out)  // output
@@ -219,11 +220,10 @@ module cpu(input reset,       // positive reset signal
     .clk(clk),
     .reset(reset),
     .pc(IF_current_pc),
-    .bcond(bcond), // 확인 필요
-    .branch(branch), // 확인 필요
+    .bcond(EX_bcond), // 확인 필요
     .EX_correct_next_pc(EX_correct_next_pc), // 확인 필요
-    .EX_pc(EX_pc), // 확인 필요
-    .next_pc(/*GShare out*/)
+    .EX_pc(EX_PC), // input
+    .next_pc(IF_GShare_out) // output
   );
 
   InstMemory imem(
@@ -387,9 +387,11 @@ module cpu(input reset,       // positive reset signal
     .out(forwardB_mux_out)
   );
 
-  Mux_2_to_1 dmem_din_mux(
+  Mux_4_to_1 dmem_din_mux(
     .x0(EX_rs2_data),
     .x1(MEM_alu_out),
+    .x2(WB_reg_write_mux_out),
+    .x3(0),
     .swch(forwardC),
     .out(dmem_din_mux_out)
   );
