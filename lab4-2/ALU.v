@@ -5,12 +5,12 @@ module ALU (
     input [31:0] alu_in_1,
     input [31:0] alu_in_2,
     output reg [31:0] alu_result,
-    output reg alu_bcond
+    output reg [1:0] alu_bcond
 );
 
     always @(*) begin
         alu_result = 32'b0;
-        alu_bcond = 1'b0;
+        alu_bcond = `BCOND_DEFAULT;
         case(alu_ctrl_out)
             `ALU_ADD: begin
                 alu_result = alu_in_1 + alu_in_2;
@@ -35,39 +35,39 @@ module ALU (
             end
             `ALU_BEQ: begin
                 if (alu_in_1 == alu_in_2) begin
-                    alu_bcond = 1'b1;
+                    alu_bcond = `BCOND_TAKEN;
                 end
                 else begin
-                    alu_bcond = 1'b0;
+                    alu_bcond = `BCOND_NOT_TAKEN;
                 end
             end
             `ALU_BNE: begin
                 if (alu_in_1 != alu_in_2) begin
-                    alu_bcond = 1'b1;
+                    alu_bcond = `BCOND_TAKEN;
                 end
                 else begin
-                    alu_bcond = 1'b0;
+                    alu_bcond = `BCOND_NOT_TAKEN;
                 end
             end
             `ALU_BLT: begin
                 if (alu_in_1 < alu_in_2) begin
-                    alu_bcond = 1'b1;
+                    alu_bcond = `BCOND_TAKEN;
                 end
                 else begin
-                    alu_bcond = 1'b0;
+                    alu_bcond = `BCOND_NOT_TAKEN;
                 end
             end
             `ALU_BGE: begin
                 if (alu_in_1 >= alu_in_2) begin
-                    alu_bcond = 1'b1;
+                    alu_bcond = `BCOND_TAKEN;
                 end
                 else begin
-                    alu_bcond = 1'b0;
+                    alu_bcond = `BCOND_NOT_TAKEN;
                 end
             end
             default begin
                 alu_result = 32'b0;
-                alu_bcond = 1'b0;
+                alu_bcond = `BCOND_NOT_TAKEN;
             end
         endcase   
     end
