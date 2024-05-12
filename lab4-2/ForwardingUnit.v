@@ -8,7 +8,8 @@ module ForwardingUnit(
     input alu_src,
     output reg [1:0] forwardA,
     output reg [1:0] forwardB,
-    output reg [1:0] forwardC);
+    output reg [1:0] forwardC
+    );
 
     always @(*) begin
         if ((EX_rs1_index != 0) && (EX_rs1_index == MEM_reg_rd) && MEM_reg_write) 

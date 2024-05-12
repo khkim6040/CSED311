@@ -24,34 +24,34 @@ module cpu(input reset,       // positive reset signal
   wire ID_EX_nop_signal; // output of HazardDetector module. Flush ID/EX pipeline register
 
   // IF stage wires
-  wire[31:0] IF_PC; // output of PC module
-  wire[31:0] IF_imem_out; // output of InstMemory module
-  wire[31:0] IF_pc_4_adder_out; // output of Adder module
-  wire[31:0] IF_next_pc_mux_out; // output of Mux_2_to_1 module
-  wire[31:0] IF_GShare_out; // output of GShare module
+  wire [31:0] IF_PC; // output of PC module
+  wire [31:0] IF_imem_out; // output of InstMemory module
+  wire [31:0] IF_pc_4_adder_out; // output of Adder module
+  wire [31:0] IF_next_pc_mux_out; // output of Mux_2_to_1 module
+  wire [31:0] IF_GShare_out; // output of GShare module
 
   // ID stage wires
-  wire[31:0] ID_rs1_dout; // output of RegisterFile module
-  wire[31:0] ID_rs2_dout; // output of RegisterFile module
-  wire[31:0] ID_imm_gen_out; // output of ImmediateGenerator module
+  wire [31:0] ID_rs1_dout; // output of RegisterFile module
+  wire [31:0] ID_rs2_dout; // output of RegisterFile module
+  wire [31:0] ID_imm_gen_out; // output of ImmediateGenerator module
   wire ID_is_ecall; // output of ControlUnit module
   wire ID_is_halted; // output of HaltDetector module
   wire ID_reg_write; // output of ControlUnit module
-  wire[1:0] ID_mem_to_reg; // output of ControlUnit module
+  wire [1:0] ID_mem_to_reg; // output of ControlUnit module
   wire ID_mem_read; // output of ControlUnit module
   wire ID_mem_write; // output of ControlUnit module
-  wire[1:0] ID_alu_op; // output of ControlUnit module
+  wire [1:0] ID_alu_op; // output of ControlUnit module
   wire ID_alu_src; // output of ControlUnit module
-  wire[31:0] ID_full_inst; // input ID stage modules
-  wire[6:0] ID_opcode; // input ID stage modules
-  wire[2:0] ID_funct3; // input ID stage modules
+  wire [31:0] ID_full_inst; // input ID stage modules
+  wire [6:0] ID_opcode; // input ID stage modules
+  wire [2:0] ID_funct3; // input ID stage modules
   wire ID_funct7; // input ID stage modules
-  wire[4:0] ID_reg_rs1; // input ID stage modules
-  wire[4:0] ID_reg_rs2; // input ID stage modules
-  wire[4:0] ID_reg_rd; // input ID stage modules
-  wire[4:0] ID_reg_rs1_mux_out; // Output of Mux_2_to_1 module
-  wire[31:0] ID_PC; // input of HazardDetector module
-  wire[1:0] ID_jump_signal; // output of ControlUnit module
+  wire [4:0] ID_reg_rs1; // input ID stage modules
+  wire [4:0] ID_reg_rs2; // input ID stage modules
+  wire [4:0] ID_reg_rd; // input ID stage modules
+  wire [4:0] ID_reg_rs1_mux_out; // Output of Mux_2_to_1 module
+  wire [31:0] ID_PC; // input of HazardDetector module
+  wire [1:0] ID_jump_signal; // output of ControlUnit module
   // Input Wires Initialization
   assign ID_full_inst = reg_IF_ID_inst;
   assign ID_opcode = reg_IF_ID_inst[6:0];
@@ -63,24 +63,24 @@ module cpu(input reset,       // positive reset signal
   assign ID_PC = reg_IF_ID_PC;
 
   // EX stage wires 
-  wire[3:0] EX_alu_ctrl_out; // output of ALUControlUnit module
-  wire[31:0] EX_alu_src2_mux_out; // output of Mux_2_to_1 module
-  wire[31:0] EX_alu_result; // output of ALU module
+  wire [3:0] EX_alu_ctrl_out; // output of ALUControlUnit module
+  wire [31:0] EX_alu_src2_mux_out; // output of Mux_2_to_1 module
+  wire [31:0] EX_alu_result; // output of ALU module
   wire [1:0] forwardA; // input of forwarding_src1_mux
   wire [1:0] forwardB; // input of forwarding_src2_mux
   wire [1:0] forwardC; // input of dmem_din_mux
   wire [31:0] forwardA_mux_out; // input of ALU A src
   wire [31:0] forwardB_mux_out; // input of ALU B src
   wire [31:0] dmem_din_mux_out; // input of DataMemory module
-  wire[31:0] EX_imm; // input of Mux_2_to_1 module
-  wire[31:0] EX_rs1_data; // input of ALU module
-  wire[31:0] EX_rs2_data; // input of Mux_2_to_1 module
+  wire [31:0] EX_imm; // input of Mux_2_to_1 module
+  wire [31:0] EX_rs1_data; // input of ALU module
+  wire [31:0] EX_rs2_data; // input of Mux_2_to_1 module
   wire EX_alu_src; // input of ALU module
-  wire[1:0] EX_alu_op; // input of ALUControlUnit module
+  wire [1:0] EX_alu_op; // input of ALUControlUnit module
   wire EX_funct7; // input of ALUControlUnit module
   wire [2:0] EX_funct3; // input of ALUControlUnit module
   wire EX_mem_read; // input of EX_MEM pipeline register
-  wire[1:0] EX_mem_to_reg; // input of EX_MEM pipeline register
+  wire [1:0] EX_mem_to_reg; // input of EX_MEM pipeline register
   wire EX_mem_write; // input of EX_MEM pipeline register
   wire [4:0] EX_reg_rd; // input of EX_MEM pipeline register
   wire EX_is_halted; // input of EX_MEM pipeline register
@@ -92,8 +92,8 @@ module cpu(input reset,       // positive reset signal
   wire [31:0] EX_correct_next_pc; // output of hazard detector
   wire EX_PCSrc; // output of hazard detector
   wire [31:0] EX_target_pc_adder_out; // output of target address Adder module
-  wire[1:0] EX_jump_signal; // output of ControlUnit module
-  wire[31:0] EX_target_pc_x0_mux_out; // output of Mux_2_to_1 module
+  wire [1:0] EX_jump_signal; // output of ControlUnit module
+  wire [31:0] EX_target_pc_x0_mux_out; // output of Mux_2_to_1 module
   // Input Wires Initialization
   assign EX_imm = reg_ID_EX_imm;
   assign EX_rs1_data = reg_ID_EX_rs1_data;
@@ -115,16 +115,16 @@ module cpu(input reset,       // positive reset signal
 
 
   // MEM stage wires
-  wire[31:0] MEM_dmem_dout; // output of DataMemory module
-  wire[31:0] MEM_alu_out; // input of DataMemory module
-  wire[31:0] MEM_dmem_din; // input of DataMemory module
+  wire [31:0] MEM_dmem_dout; // output of DataMemory module
+  wire [31:0] MEM_alu_out; // input of DataMemory module
+  wire [31:0] MEM_dmem_din; // input of DataMemory module
   wire MEM_mem_write; // input of DataMemory module
   wire MEM_mem_read; // input of DataMemory module
-  wire[1:0] MEM_mem_to_reg; // input of MEM_WB pipeline register
+  wire [1:0] MEM_mem_to_reg; // input of MEM_WB pipeline register
   wire MEM_reg_write; // input of MEM_WB pipeline register
   wire MEM_is_halted; // input of MEM_WB pipeline register
-  wire[4:0] MEM_reg_rd; // input of MEM_WB pipeline register
-  wire[31:0] MEM_PC; 
+  wire [4:0] MEM_reg_rd; // input of MEM_WB pipeline register
+  wire [31:0] MEM_PC; 
   // Input Wires Initialization
   assign MEM_alu_out = reg_EX_MEM_alu_out;
   assign MEM_dmem_din = reg_EX_MEM_dmem_din;
@@ -137,13 +137,13 @@ module cpu(input reset,       // positive reset signal
   assign MEM_PC = reg_EX_MEM_PC;
 
   // WB stage wires
-  wire[31:0] WB_reg_write_mux_out; // output of Mux_2_to_1 module
-  wire[31:0] WB_mem_to_reg_src_1; // input of Mux_2_to_1 module
-  wire[31:0] WB_mem_to_reg_src_2; // input of Mux_2_to_1 module
-  wire[1:0] WB_mem_to_reg; // input of Mux_2_to_1 module
+  wire [31:0] WB_reg_write_mux_out; // output of Mux_2_to_1 module
+  wire [31:0] WB_mem_to_reg_src_1; // input of Mux_2_to_1 module
+  wire [31:0] WB_mem_to_reg_src_2; // input of Mux_2_to_1 module
+  wire [1:0] WB_mem_to_reg; // input of Mux_2_to_1 module
   wire WB_reg_write; // input of MEM_WB pipeline register
   wire [4:0] WB_reg_rd;
-  wire[31:0] WB_PC; 
+  wire [31:0] WB_PC; 
   // Input Wires Initialization
   assign WB_mem_to_reg_src_1 = reg_MEM_WB_mem_to_reg_src_1;
   assign WB_mem_to_reg_src_2 = reg_MEM_WB_mem_to_reg_src_2;
@@ -162,19 +162,19 @@ module cpu(input reset,       // positive reset signal
   reg [31:0] reg_IF_ID_PC;
   /***** ID/EX pipeline registers *****/
   // From the control unit
-  reg[1:0] reg_ID_EX_alu_op;         // will be used in EX stage
+  reg [1:0] reg_ID_EX_alu_op;         // will be used in EX stage
   reg reg_ID_EX_alu_src;        // will be used in EX stage
   reg reg_ID_EX_mem_write;      // will be used in MEM stage
   reg reg_ID_EX_mem_read;       // will be used in MEM stage
-  reg[1:0] reg_ID_EX_mem_to_reg;     // will be used in WB stage
+  reg [1:0] reg_ID_EX_mem_to_reg;     // will be used in WB stage
   reg reg_ID_EX_reg_write;      // will be used in WB stage
   reg reg_ID_EX_is_halted;       // will be used in WB stage
-  reg[1:0] reg_ID_EX_jump_signal;     // will be used in EX stage
+  reg [1:0] reg_ID_EX_jump_signal;     // will be used in EX stage
   // From others
-  reg[31:0] reg_ID_EX_rs1_data;
-  reg[31:0] reg_ID_EX_rs2_data;
-  reg[31:0] reg_ID_EX_imm;
-  reg[4:0] reg_ID_EX_rd;
+  reg [31:0] reg_ID_EX_rs1_data;
+  reg [31:0] reg_ID_EX_rs2_data;
+  reg [31:0] reg_ID_EX_imm;
+  reg [4:0] reg_ID_EX_rd;
   reg reg_ID_EX_funct7;
   reg [2:0] reg_ID_EX_funct3;
   reg [4:0] reg_ID_EX_rs1_index;
@@ -185,25 +185,25 @@ module cpu(input reset,       // positive reset signal
   // From the control unit
   reg reg_EX_MEM_mem_write;     // will be used in MEM stage
   reg reg_EX_MEM_mem_read;      // will be used in MEM stage
-  reg[1:0] reg_EX_MEM_mem_to_reg;    // will be used in WB stage
+  reg [1:0] reg_EX_MEM_mem_to_reg;    // will be used in WB stage
   reg reg_EX_MEM_reg_write;     // will be used in WB stage
   reg reg_EX_MEM_is_halted;      // will be used in WB stage
   // From others
-  reg[31:0] reg_EX_MEM_alu_out;
-  reg[31:0] reg_EX_MEM_dmem_din;
-  reg[4:0] reg_EX_MEM_rd;
-  reg[31:0] reg_EX_MEM_PC;
+  reg [31:0] reg_EX_MEM_alu_out;
+  reg [31:0] reg_EX_MEM_dmem_din;
+  reg [4:0] reg_EX_MEM_rd;
+  reg [31:0] reg_EX_MEM_PC;
 
   /***** MEM/WB pipeline registers *****/
   // From the control unit
-  reg[1:0] reg_MEM_WB_mem_to_reg;    // will be used in WB stage
+  reg [1:0] reg_MEM_WB_mem_to_reg;    // will be used in WB stage
   reg reg_MEM_WB_reg_write;     // will be used in WB stage
   reg reg_MEM_WB_is_halted;      // will be used in WB stage
   // From others
-  reg[31:0] reg_MEM_WB_mem_to_reg_src_1;
-  reg[31:0] reg_MEM_WB_mem_to_reg_src_2;
-  reg[4:0] reg_MEM_WB_rd;
-  reg[31:0] reg_MEM_WB_PC;
+  reg [31:0] reg_MEM_WB_mem_to_reg_src_1;
+  reg [31:0] reg_MEM_WB_mem_to_reg_src_2;
+  reg [4:0] reg_MEM_WB_rd;
+  reg [31:0] reg_MEM_WB_PC;
 
 
 

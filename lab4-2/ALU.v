@@ -7,7 +7,7 @@ module ALU (
     input [1:0] jump_signal,
     output reg [31:0] alu_result,
     output reg [1:0] alu_bcond
-);
+    );
 
     always @(*) begin
         alu_result = 32'b0;

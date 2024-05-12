@@ -3,7 +3,7 @@
 module ImmediateGenerator (
     input [31:0] part_of_inst,
     output reg [31:0] imm_gen_out
-);
+    );
 
     wire [6:0] opcode;
     wire [2:0] funct3;

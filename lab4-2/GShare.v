@@ -1,13 +1,14 @@
 `include "opcodes.v"
 
 module GShare(
-                input clk,
-                input reset,
-                input [31:0] pc,
-                input [1:0] bcond,
-                input [31:0] EX_correct_next_pc,
-                input [31:0] EX_pc,
-                output reg [31:0] next_pc);
+    input clk,
+    input reset,
+    input [31:0] pc,
+    input [1:0] bcond,
+    input [31:0] EX_correct_next_pc,
+    input [31:0] EX_pc,
+    output reg [31:0] next_pc
+    );
 
     reg [56:0] BTB [31:0];
     reg [4:0] BHSR;

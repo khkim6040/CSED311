@@ -5,7 +5,7 @@ module ALUControlUnit (
     input [2:0] funct3,
     input [1:0] alu_op,
     output reg [3:0] alu_ctrl_out
-);
+    );
 
     always @(*) begin 
         case(alu_op) 

@@ -1,23 +1,25 @@
 `include "opcodes.v"
 
-module HazardDetector (input clk,
-                       input reset,
-                       input [31:0] instruction,
-                       input [4:0] rs1,
-                       input [4:0] EX_rd,
-                       input [4:0] MEM_rd,
-                       input mem_read,
-                       input is_ecall,
-                       input [1:0] bcond,
-                       input [31:0] ID_PC,
-                       input [31:0] EX_PC,
-                       input [31:0] target_pc,
-                       output reg PC_write,
-                       output reg IF_ID_write,
-                       output reg ID_EX_nop_signal,
-                       output reg IF_ID_nop_signal,
-                       output reg [31:0] EX_correct_next_pc,
-                       output reg EX_PCSrc);
+module HazardDetector (
+    input clk,
+    input reset,
+    input [31:0] instruction,
+    input [4:0] rs1,
+    input [4:0] EX_rd,
+    input [4:0] MEM_rd,
+    input mem_read,
+    input is_ecall,
+    input [1:0] bcond,
+    input [31:0] ID_PC,
+    input [31:0] EX_PC,
+    input [31:0] target_pc,
+    output reg PC_write,
+    output reg IF_ID_write,
+    output reg ID_EX_nop_signal,
+    output reg IF_ID_nop_signal,
+    output reg [31:0] EX_correct_next_pc,
+    output reg EX_PCSrc
+    );
 
     reg [4:0] rs2;
     reg [6:0] opcode;

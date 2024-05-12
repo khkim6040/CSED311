@@ -4,7 +4,7 @@ module PC(
     input [31:0] next_pc,
     input pc_write_signal,
     output reg [31:0] current_pc
-);
+    );
 
     always @(posedge clk) begin
         if (reset) begin
