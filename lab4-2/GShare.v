@@ -22,8 +22,8 @@ module GShare(
     wire [24:0] EX_tag;
     wire [3:0] unused;
     wire [31:0] predicted_pc;
-    wire [4:0] PTH_index;
-    wire [4:0] updated_PTH_index;
+    wire [4:0] PHT_index;
+    wire [4:0] updated_PHT_index;
     wire tag_matched;
     wire PHT_taken;
 
@@ -35,11 +35,11 @@ module GShare(
 
     assign unused = {pc[1:0], EX_pc[1:0]};
     assign predicted_pc = BTB[index][31:0];
-    assign PTH_index = BHSR^index;
-    assign updated_PTH_index = BHSR^EX_index;
+    assign PHT_index = BHSR^index;
+    assign updated_PHT_index = BHSR^EX_index;
 
     assign tag_matched = tag == BTB_tag;
-    assign PHT_taken = PHT[PTH_index] > 1;
+    assign PHT_taken = PHT[PHT_index] > 1;
 
     integer i;
     // update BTB, BHSR, PHT 
@@ -52,16 +52,18 @@ module GShare(
             end
             BHSR <= 0;
         end
-        else if (bcond == `BCOND_TAKEN || bcond == `BCOND_NOT_TAKEN) begin
-            if (bcond == `BCOND_TAKEN && PHT[updated_PTH_index] < 3)
-                PHT[updated_PTH_index] <= (PHT[updated_PTH_index]+1);
-            else if(bcond == `BCOND_NOT_TAKEN && PHT[updated_PTH_index] > 0) 
-                PHT[updated_PTH_index] <= (PHT[updated_PTH_index]-1);
+        else if (bcond == `BCOND_TAKEN || bcond == `BCOND_NOT_TAKEN || bcond == `BCOND_JUMP) begin
+            if ((bcond == `BCOND_TAKEN || bcond == `BCOND_JUMP) && PHT[updated_PHT_index] < 3)
+                PHT[updated_PHT_index] <= (PHT[updated_PHT_index] + 1);
+            else if(bcond == `BCOND_NOT_TAKEN && PHT[updated_PHT_index] > 0) 
+                PHT[updated_PHT_index] <= (PHT[updated_PHT_index] - 1);
             else
                 temp <= 0;
+            //update BTB and BHSR
             BTB[EX_index] <= {EX_tag, EX_correct_next_pc};
-            BHSR[0] <= bcond[0]; // 2bits to 1bit
-            BHSR <= (BHSR << 1);
+            if (bcond == `BCOND_TAKEN || bcond == `BCOND_NOT_TAKEN) begin
+                BHSR <= {BHSR[3:0], bcond[0]};
+            end
         end
         else 
             temp <= 0;
@@ -70,7 +72,8 @@ module GShare(
     Mux_2_to_1 predicted_pc_mux(
         .x0(pc+4),
         .x1(predicted_pc),
-        .swch(tag_matched & PHT_taken),
+        // PC = 0으로 뛰는 명령어 없기 때문에 predicted_pc가 0이라면 invalid로 처리
+        .swch(tag_matched && PHT_taken && predicted_pc != 0),
         .out(next_pc)
     );
 

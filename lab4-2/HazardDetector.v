@@ -34,7 +34,7 @@ module HazardDetector (
     // Jump uses only rs1
     wire is_rs1_used, is_rs2_used;
     assign is_rs1_used = rs1 != 0 && (opcode == `ARITHMETIC || opcode == `ARITHMETIC_IMM || opcode == `LOAD || 
-                                        opcode == `STORE || opcode == `BRANCH || opcode == `JAL || opcode == `ECALL);
+                                        opcode == `STORE || opcode == `BRANCH || opcode == `JALR || opcode == `ECALL);
     assign is_rs2_used = rs2 != 0 && (opcode == `ARITHMETIC || opcode == `STORE || opcode == `BRANCH);
 
     // Detect Hazards
