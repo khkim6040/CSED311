@@ -20,6 +20,8 @@ module cpu(input reset,       // positive reset signal
   // Register update signals
   wire PC_write; // output of HazardDetector module, for PC module
   wire IF_ID_write; // output of HazardDetector module, for IF/ID pipeline register
+  wire ID_EX_write; // output of HazardDetector module, for ID/EX pipeline register
+  wire EX_MEM_write; // output of HazardDetector module, for EX/MEM pipeline register
   wire IF_ID_nop_signal; // output of HazardDetector module. Flush IF/ID pipeline register
   wire ID_EX_nop_signal; // output of HazardDetector module. Flush ID/EX pipeline register
 
@@ -125,6 +127,9 @@ module cpu(input reset,       // positive reset signal
   wire MEM_is_halted; // input of MEM_WB pipeline register
   wire [4:0] MEM_reg_rd; // input of MEM_WB pipeline register
   wire [31:0] MEM_PC; 
+  wire MEM_is_ready; // output of dcache module
+  wire MEM_is_output_valid; // output of dcache module
+  wire MEM_is_hit; // output of dcache module
   // Input Wires Initialization
   assign MEM_alu_out = reg_EX_MEM_alu_out;
   assign MEM_dmem_din = reg_EX_MEM_dmem_din;
@@ -354,23 +359,25 @@ module cpu(input reset,       // positive reset signal
       reg_ID_EX_jump_signal <= `JUMP_DEFAULT;
     end
     else begin
-      reg_ID_EX_alu_op <= ID_alu_op;
-      reg_ID_EX_alu_src <= ID_alu_src;
-      reg_ID_EX_mem_write <= ID_mem_write;
-      reg_ID_EX_mem_read <= ID_mem_read;
-      reg_ID_EX_mem_to_reg <= ID_mem_to_reg;
-      reg_ID_EX_reg_write <= ID_reg_write;
-      reg_ID_EX_is_halted <= ID_is_halted;
-      reg_ID_EX_rs1_data <= ID_rs1_dout;
-      reg_ID_EX_rs2_data <= ID_rs2_dout;
-      reg_ID_EX_imm <= ID_imm_gen_out;
-      reg_ID_EX_rd <= ID_reg_rd;
-      reg_ID_EX_funct7 <= ID_funct7;
-      reg_ID_EX_funct3 <= ID_funct3;
-      reg_ID_EX_rs1_index <= ID_reg_rs1_mux_out;
-      reg_ID_EX_rs2_index <= ID_reg_rs2;
-      reg_ID_EX_PC <= ID_PC;
-      reg_ID_EX_jump_signal <= ID_jump_signal;
+      if(ID_EX_write) begin
+        reg_ID_EX_alu_op <= ID_alu_op;
+        reg_ID_EX_alu_src <= ID_alu_src;
+        reg_ID_EX_mem_write <= ID_mem_write;
+        reg_ID_EX_mem_read <= ID_mem_read;
+        reg_ID_EX_mem_to_reg <= ID_mem_to_reg;
+        reg_ID_EX_reg_write <= ID_reg_write;
+        reg_ID_EX_is_halted <= ID_is_halted;
+        reg_ID_EX_rs1_data <= ID_rs1_dout;
+        reg_ID_EX_rs2_data <= ID_rs2_dout;
+        reg_ID_EX_imm <= ID_imm_gen_out;
+        reg_ID_EX_rd <= ID_reg_rd;
+        reg_ID_EX_funct7 <= ID_funct7;
+        reg_ID_EX_funct3 <= ID_funct3;
+        reg_ID_EX_rs1_index <= ID_reg_rs1_mux_out;
+        reg_ID_EX_rs2_index <= ID_reg_rs2;
+        reg_ID_EX_PC <= ID_PC;
+        reg_ID_EX_jump_signal <= ID_jump_signal;
+      end
     end
   end
 
@@ -459,15 +466,17 @@ module cpu(input reset,       // positive reset signal
       reg_EX_MEM_PC <= 32'b0;
     end
     else begin
-      reg_EX_MEM_mem_write <= EX_mem_write;
-      reg_EX_MEM_mem_read <= EX_mem_read;
-      reg_EX_MEM_mem_to_reg <= EX_mem_to_reg;
-      reg_EX_MEM_reg_write <= EX_reg_write;
-      reg_EX_MEM_is_halted <= EX_is_halted;
-      reg_EX_MEM_alu_out <= EX_alu_result;
-      reg_EX_MEM_dmem_din <= dmem_din_mux_out;
-      reg_EX_MEM_rd <= EX_reg_rd;
-      reg_EX_MEM_PC <= EX_PC;
+      if(EX_MEM_write) begin
+        reg_EX_MEM_mem_write <= EX_mem_write;
+        reg_EX_MEM_mem_read <= EX_mem_read;
+        reg_EX_MEM_mem_to_reg <= EX_mem_to_reg;
+        reg_EX_MEM_reg_write <= EX_reg_write;
+        reg_EX_MEM_is_halted <= EX_is_halted;
+        reg_EX_MEM_alu_out <= EX_alu_result;
+        reg_EX_MEM_dmem_din <= dmem_din_mux_out;
+        reg_EX_MEM_rd <= EX_reg_rd;
+        reg_EX_MEM_PC <= EX_PC;
+      end
     end
   end
 
@@ -476,7 +485,7 @@ module cpu(input reset,       // positive reset signal
   Cache dcache(
     .reset (reset),      // input
     .clk (clk),        // input
-    .is_input_valid (1),     // input // TODO: check this
+    .is_input_valid (0),     // input // TODO: check this
     .addr (MEM_alu_out),       // input
     .mem_read (MEM_mem_read),   // input
     .mem_write (MEM_mem_write),  // input
