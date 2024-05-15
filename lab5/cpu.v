@@ -318,8 +318,13 @@ module cpu(input reset,       // positive reset signal
     .EX_PC(EX_PC),  // input
     .ID_PC(ID_PC),  // input
     .target_pc(EX_target_pc_adder_out),  // input
+    .MEM_is_ready(MEM_is_ready),  // input
+    .MEM_is_output_valid(MEM_is_output_valid),  // input
+    .MEM_is_hit(MEM_is_hit),  // input
     .PC_write(PC_write),  // output
     .IF_ID_write(IF_ID_write),  // output
+    .ID_EX_write(ID_EX_write),  // output
+    .EX_MEM_write(EX_MEM_write),  // output
     .IF_ID_nop_signal(IF_ID_nop_signal),  // output
     .ID_EX_nop_signal(ID_EX_nop_signal),  // output
     .EX_correct_next_pc(EX_correct_next_pc),  // output
@@ -468,14 +473,18 @@ module cpu(input reset,       // positive reset signal
 
 // ------------------- MEM stage -------------------
 
-  DataMemory dmem(
+  Cache dcache(
     .reset (reset),      // input
     .clk (clk),        // input
+    .is_input_valid (1),     // input // TODO: check this
     .addr (MEM_alu_out),       // input
-    .din (MEM_dmem_din),        // input
     .mem_read (MEM_mem_read),   // input
     .mem_write (MEM_mem_write),  // input
+    .din (MEM_dmem_din),        // input
+    .is_ready (MEM_is_ready),        // output
+    .is_output_valid (MEM_is_output_valid),      // output
     .dout (MEM_dmem_dout)        // output
+    .is_hit (MEM_is_hit)
   );
 
   // Update MEM/WB pipeline registers here
