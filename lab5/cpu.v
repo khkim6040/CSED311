@@ -487,8 +487,8 @@ module cpu(input reset,       // positive reset signal
     .clk (clk),        // input
     .is_input_valid (0),     // input // TODO: check this
     .addr (MEM_alu_out),       // input
-    .mem_read (MEM_mem_read),   // input
-    .mem_write (MEM_mem_write),  // input
+    .mem_read (MEM_mem_read),   // input // TODO: replace
+    .mem_write (MEM_mem_write),  // input // TODO: replace
     .din (MEM_dmem_din),        // input
     .is_ready (MEM_is_ready),        // output
     .is_output_valid (MEM_is_output_valid),      // output
