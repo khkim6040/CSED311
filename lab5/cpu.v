@@ -326,6 +326,8 @@ module cpu(input reset,       // positive reset signal
     .MEM_is_ready(MEM_is_ready),  // input
     .MEM_is_output_valid(MEM_is_output_valid),  // input
     .MEM_is_hit(MEM_is_hit),  // input
+    .MEM_mem_read(MEM_mem_read),  // input
+    .MEM_mem_write(MEM_mem_write),  // input
     .PC_write(PC_write),  // output
     .IF_ID_write(IF_ID_write),  // output
     .ID_EX_write(ID_EX_write),  // output
@@ -485,14 +487,13 @@ module cpu(input reset,       // positive reset signal
   Cache dcache(
     .reset (reset),      // input
     .clk (clk),        // input
-    .is_input_valid (0),     // input // TODO: check this
+    .is_input_valid (MEM_mem_read || MEM_mem_write),     // input 
     .addr (MEM_alu_out),       // input
-    .mem_read (MEM_mem_read),   // input // TODO: replace
-    .mem_write (MEM_mem_write),  // input // TODO: replace
+    .mem_rw (MEM_mem_write),   // input
     .din (MEM_dmem_din),        // input
     .is_ready (MEM_is_ready),        // output
     .is_output_valid (MEM_is_output_valid),      // output
-    .dout (MEM_dmem_dout)        // output
+    .dout (MEM_dmem_dout),        // output
     .is_hit (MEM_is_hit)
   );
 

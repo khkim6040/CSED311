@@ -16,9 +16,11 @@ module HazardDetector (
     input [31:0] MEM_is_ready,
     input [31:0] MEM_is_output_valid,
     input [31:0] MEM_is_hit,
+    input MEM_mem_read,
+    input MEM_mem_write,
     output reg PC_write,
     output reg IF_ID_write,
-    output reg ID_EX write,
+    output reg ID_EX_write,
     output reg EX_MEM_write,
     output reg ID_EX_nop_signal,
     output reg IF_ID_nop_signal,
@@ -88,11 +90,13 @@ module HazardDetector (
             EX_PCSrc = 1;
         end
         // Cache Miss stall
-        else if(!(MEM_is_ready && MEM_is_output_valid && MEM_is_hit)) begin
+        else if((MEM_mem_read && !(MEM_is_ready && MEM_is_output_valid && MEM_is_hit)) ||
+                    (MEM_mem_write && !(MEM_is_ready && MEM_is_hit))) begin
             PC_write = 0;
             IF_ID_write = 0;
             ID_EX_write = 0;
             EX_MEM_write = 0;
+        end
         else begin
             PC_write = 1;
             IF_ID_write = 1;
