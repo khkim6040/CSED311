@@ -35,15 +35,15 @@ module Cache #(parameter LINE_SIZE = 16,
     input mem_rw,
     input [31:0] din,
 
-    output is_ready,
-    output is_output_valid,
-    output [31:0] dout,
-    output is_hit);
+    output reg is_ready,
+    output reg is_output_valid,
+    output reg [31:0] dout,
+    output reg is_hit);
   // Wire declarations
   integer i;
   wire is_data_mem_ready;
-  wire is_write_hit;
-  wire is_read_hit;  
+  reg is_write_hit;
+  reg is_read_hit;  
   assign is_hit = is_write_hit || is_read_hit;
 
   wire [`TAG_SIZE-1:0] D_tag;
@@ -57,21 +57,21 @@ module Cache #(parameter LINE_SIZE = 16,
 
   
 
-  wire line0_matched = 0;
-  wire line1_matched = 0;
-  wire line0_is_valid = 0;
-  wire line1_is_valid = 0;
-  wire C_is_input_valid = 0;
-  wire C_mem_read = 0;
-  wire C_mem_write = 0;
-  wire [31:0] C_addr;
-  wire [127:0] C_din;
+  wire line0_matched;
+  wire line1_matched;
+  wire line0_is_valid;
+  wire line1_is_valid;
+  reg C_is_input_valid;
+  reg C_mem_read;
+  reg C_mem_write;
+  reg [31:0] C_addr;
+  reg [127:0] C_din;
   assign line0_matched = cache[D_set][0][`TAG_IDX:`TAG_IDX-24] == D_tag;
   assign line1_matched = cache[D_set][1][`TAG_IDX:`TAG_IDX-24] == D_tag;
   assign line0_is_valid = cache[D_set][0][`VALID_IDX];
   assign line1_is_valid = cache[D_set][1][`VALID_IDX];
   wire M_is_output_valid;
-  wire old_line;
+  reg old_line;
 
   wire is_old_line_dirty;
   wire [LINE_SIZE*8-1:0] M_dout;
@@ -91,10 +91,10 @@ module Cache #(parameter LINE_SIZE = 16,
     //            > set LRU to 0(younger) > set other LRU to 1(older)
 
   always @(posedge clk) begin
-    C_is_input_valid = 0;
-    C_mem_read = 0;
-    C_mem_write = 0;
-    is_write_hit = 0;
+    C_is_input_valid <= 0;
+    C_mem_read <= 0;
+    C_mem_write <= 0;
+    is_write_hit <= 0;
 
     if(reset) begin
       for (i=0; i<NUM_SETS; i=i+1) begin
@@ -113,7 +113,7 @@ module Cache #(parameter LINE_SIZE = 16,
     if(is_input_valid && mem_rw == `WRITE) begin
       if(line0_matched) begin
         // hit
-        is_write_hit = 1;
+        is_write_hit <= 1;
         // assume that cache is empty
         cache[D_set][0][D_bo*32 +: 32] <= din;
         cache[D_set][0][`LRU_IDX] <= `LRU_NEW;
@@ -122,7 +122,7 @@ module Cache #(parameter LINE_SIZE = 16,
       end
       else if(line1_matched) begin
         // hit
-        is_write_hit = 1;
+        is_write_hit <= 1;
         // assume that cache is empty
         cache[D_set][0][D_bo*32 +: 32] <= din;
         cache[D_set][1][`LRU_IDX] <= `LRU_NEW;
@@ -135,20 +135,20 @@ module Cache #(parameter LINE_SIZE = 16,
           // evict dirty line
           // write data to memory
           if(is_data_mem_ready) begin
-            C_is_input_valid = 1;
-            C_mem_write = 1;
-            C_addr = {cache[D_set][old_line][`TAG_IDX:`TAG_IDX-24], D_set, 4'b0};
-            C_din = cache[D_set][old_line][127:0];
-            cache[D_set][old_line][`DIRTY_IDX] = 0;
+            C_is_input_valid <= 1;
+            C_mem_write <= 1;
+            C_addr <= {cache[D_set][old_line][`TAG_IDX:`TAG_IDX-24], D_set, 4'b0};
+            C_din <= cache[D_set][old_line][127:0];
+            cache[D_set][old_line][`DIRTY_IDX] <= 0;
           end
           // set dirty line to 0
         end
         else begin
           // read data from memory
           if(is_data_mem_ready) begin
-            C_is_input_valid = 1;
-            C_mem_read = 1;
-            C_addr = addr;
+            C_is_input_valid <= 1;
+            C_mem_read <= 1;
+            C_addr <= addr;
           end
         end
       end
@@ -159,6 +159,7 @@ module Cache #(parameter LINE_SIZE = 16,
 
 
   always @(*) begin
+    old_line = 0;
     if (cache[D_set][0][`LRU_IDX] == `LRU_OLD) begin
       old_line = 0;
     end
@@ -166,9 +167,15 @@ module Cache #(parameter LINE_SIZE = 16,
       old_line = 1;
     end
 
-
     is_read_hit = 0;
     is_output_valid = 0;
+    dout = 0;
+    C_mem_read = 0;
+    C_mem_write = 0;
+    C_is_input_valid = 0;
+    C_addr = 0;
+    C_din = 0;
+    
     // Read
     // Calculate set index and tag
     if(is_input_valid && mem_rw == `READ) begin
@@ -180,14 +187,16 @@ module Cache #(parameter LINE_SIZE = 16,
         if(line0_is_valid) begin
           // line 0 hit
           is_output_valid = 1;
-          cache[D_set][0][`LRU_IDX] <= `LRU_NEW;
-          cache[D_set][1][`LRU_IDX] <= `LRU_OLD;
+          cache[D_set][0][`LRU_IDX] = `LRU_NEW;
+          cache[D_set][1][`LRU_IDX] = `LRU_OLD;
         end
         else begin
           if(is_data_mem_ready) begin
             C_is_input_valid = 1;
             C_mem_read = 1;
             C_addr = addr;
+          end
+          else begin
           end
         end 
       end
@@ -198,8 +207,8 @@ module Cache #(parameter LINE_SIZE = 16,
         if(line1_is_valid) begin
           // line 1 hit
           is_output_valid = 1;
-          cache[D_set][1][`LRU_IDX] <= `LRU_NEW;
-          cache[D_set][0][`LRU_IDX] <= `LRU_OLD;
+          cache[D_set][1][`LRU_IDX] = `LRU_NEW;
+          cache[D_set][0][`LRU_IDX] = `LRU_OLD;
         end
         else begin
           if(is_data_mem_ready) begin
@@ -207,6 +216,8 @@ module Cache #(parameter LINE_SIZE = 16,
             C_mem_read = 1;
             C_addr = addr;
           end
+          else begin
+          end 
         end
       end
       // miss
@@ -221,7 +232,8 @@ module Cache #(parameter LINE_SIZE = 16,
             C_din = cache[D_set][old_line][127:0];
             cache[D_set][old_line][`DIRTY_IDX] = 0;
           end
-          // set dirty line to 0
+          else begin
+          end
         end
         else begin
           // read data from memory
@@ -230,8 +242,12 @@ module Cache #(parameter LINE_SIZE = 16,
             C_mem_read = 1;
             C_addr = addr;
           end
+          else begin
+          end
         end
       end
+    end
+    else begin
     end
   end
 
@@ -244,10 +260,10 @@ module Cache #(parameter LINE_SIZE = 16,
 
     .is_input_valid(C_is_input_valid),
     // NOTE: address must be shifted by CLOG2(LINE_SIZE)
-    .addr(C_addr >> `CLOG2(LINE_SIZE)),     
+    .addr(C_addr >> (`CLOG2(LINE_SIZE))),     
     .mem_read(C_mem_read),
     .mem_write(C_mem_write),
-    .din(din),
+    .din(C_din),
 
     // is output from the data memory valid?
     .is_output_valid(M_is_output_valid),
