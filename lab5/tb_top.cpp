@@ -4,9 +4,9 @@
 #include <verilated.h>
 #include <verilated_vcd_c.h>
 
-#include <iostream>
 #include <fstream>
 #include <iomanip>
+#include <iostream>
 #include <stdlib.h>
 #include <string>
 using namespace std;
@@ -28,7 +28,8 @@ void next_cycle(Vtop* dut, VerilatedVcdC* m_trace) {
 
 int main(int argc, char** argv, char** env) {
     // TO DO : CHANGE "filename" TO PROVIDED "answer_*.txt" PATH
-    string filename = "/path/to/result/file";
+    // string filename = "student_tb/naive_ripes_result.txt";
+    string filename = "student_tb/opt_ripes_result.txt";
     ifstream file(filename);
     stringstream ss;
     string reg_hex;
@@ -53,7 +54,7 @@ int main(int argc, char** argv, char** env) {
     dut->reset = 1;
     dut->eval();
     m_trace->dump(sim_time++);
-    
+
     dut->clk = 1;
     dut->eval();
     m_trace->dump(sim_time++);
@@ -77,7 +78,7 @@ int main(int argc, char** argv, char** env) {
     cout << "SIM TIME : " << sim_time << endl;
     cout << "TOTAL CYCLE : " << total_cycle << " (Answer : " << answer_cycle << ")" << endl;
     cout << "FINAL REGISTER OUTPUT" << endl;
-    
+
     // Print your Hit ratio
     //
 
@@ -92,8 +93,7 @@ int main(int argc, char** argv, char** env) {
         if (reg_hex == answer_reg) {
             cout << endl;
             correct_count++;
-        }
-        else {
+        } else {
             cout << " (Wrong)" << endl;
         }
     }
