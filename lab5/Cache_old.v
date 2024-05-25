@@ -24,12 +24,6 @@
 `define LRU_NEW 1'b0
 `define LRU_OLD 1'b1
 
-`define A 2'b00
-`define B 2'b01
-`define C 2'b10
-`define D 2'b11
-
-
 module Cache #(parameter LINE_SIZE = 16,
                parameter NUM_SETS = 8,
                parameter NUM_WAYS = 2) (
@@ -44,19 +38,10 @@ module Cache #(parameter LINE_SIZE = 16,
     output is_ready,
     output is_output_valid,
     output reg [31:0] dout,
-    output reg is_hit);
-
-  wire is_data_mem_ready;
-  reg is_write_hit;
-  reg is_read_hit;
-  //wire matched_line;
-  assign is_ready = is_data_mem_ready || is_hit;
+    output is_hit);
+  // Wire declarations
   assign is_output_valid = is_input_valid && ((line0_matched && line0_is_valid) || (line1_matched && line1_is_valid));
-  //assign matched_line = line1_matched; // line1 is not matched, line0 can be matched or not. if line0 matched, 0 is correct. if line0 is also not matched, don't care.  
-  //assign dout = cache[D_set][matched_line][D_bo*32 +: 32];
-  //assign is_write_hit = is_output_valid && mem_rw == `WRITE;
-  //assign is_read_hit = is_output_valid && mem_rw == `READ;
-  //assign is_hit = is_write_hit || is_read_hit;
+  
 
   wire [`TAG_SIZE-1:0] D_tag;
   wire [`SET_SIZE-1:0] D_set;
@@ -64,6 +49,10 @@ module Cache #(parameter LINE_SIZE = 16,
   assign D_tag = addr[31:`D_TAG_IDX];
   assign D_set = addr[`D_TAG_IDX-1:`D_SET_IDX];
   assign D_bo = addr[`D_SET_IDX-1:2];
+
+  
+
+  
 
   wire line0_matched;
   wire line1_matched;
@@ -73,119 +62,98 @@ module Cache #(parameter LINE_SIZE = 16,
   assign line1_matched = cache[D_set][1][`TAG_IDX:`TAG_IDX-24] == D_tag;
   assign line0_is_valid = cache[D_set][0][`VALID_IDX];
   assign line1_is_valid = cache[D_set][1][`VALID_IDX];
-
-  reg old_line;
-  wire is_old_line_dirty;
-  //assign old_line = cache[D_set][0][`LRU_IDX] == `LRU_OLD ? 0 : 1;
-  assign is_old_line_dirty = cache[D_set][old_line][`DIRTY_IDX];
-
   reg C_is_input_valid;
   reg C_mem_read;
   reg C_mem_write;
   reg [31:0] C_addr;
   reg [127:0] C_din;
   wire M_is_output_valid;
-  wire [LINE_SIZE*8-1:0] M_dout;
+  reg old_line;
+  integer i;
+  reg is_write_hit;
+  reg is_read_hit;  
+  assign is_hit = is_write_hit || is_read_hit;
 
+  wire [LINE_SIZE*8-1:0] M_dout;
+  // Reg declarations
   // Cache Block Structure
   // | LRU | Dirty | Valid | Tag |   Data  |
   // |  1  |   1   |   1   | 25  |  32 * 4 |
   reg [155:0] cache [NUM_SETS-1:0][NUM_WAYS-1:0];
+  // You might need registers to keep the status.
+  wire is_data_mem_ready;
+  assign is_ready = is_data_mem_ready;
+  
+  wire is_old_line_dirty;
+  assign is_old_line_dirty = cache[D_set][old_line][`DIRTY_IDX];
 
-  reg [1:0] state = `A;
-
-  integer i;
 
     // HIT case: index > tag matched > valid > hit and return data > set LRU to 0(younger) > set other LRU to 1(older)
     // MISS case: index > tag not matched > retrieve data from memory > put data into cache > first, put data into cache line where valid = 0, second put data into cache line where LRU = 1
     //            > set LRU to 0(younger) > set other LRU to 1(older)
 
-
   always @(posedge clk) begin
-    // Initialize Cache
+    is_write_hit <= 0;
     if(reset) begin
       for (i=0; i<NUM_SETS; i=i+1) begin
         cache[i][0] <= {`LRU_NEW, 1'b0, 1'b0, 25'b0, 128'b0};
         cache[i][1] <= {`LRU_OLD, 1'b0, 1'b0, 25'b0, 128'b0};
       end
     end
-
-    is_write_hit <= 0;
-    C_is_input_valid <= 0;
-    C_mem_read <= 0;
-    C_mem_write <= 0;
-    C_addr <= 0;
-    C_din <= 0;
-
-    // $display("state: %b", state);
-    //$display("mem_rw: %b", mem_rw);
-
-    // STATE A
-    if (state == `A) begin
-      if (is_input_valid)
-        state <= `B;
-      else
-        state <= `A;
+    // Write
+    if(M_is_output_valid) begin
+      cache[D_set][old_line][127:0] <= M_dout;
+      cache[D_set][old_line][`DIRTY_IDX] <= 0;
+      cache[D_set][old_line][`VALID_IDX] <= 1;
+      cache[D_set][old_line][`TAG_IDX:`TAG_IDX-24] <= D_tag;
     end
-    // STATE B
-    else if (state == `B) begin
-      // Compare Tag
-      if (is_input_valid) begin
-        if (mem_rw == `WRITE) begin
-          if(line0_matched) begin
-            is_write_hit <= 1;
-            cache[D_set][0][D_bo*32 +: 32] <= din;
-            cache[D_set][0][`DIRTY_IDX] <= 1;
-            state <= `A;
-          end
-          else if(line1_matched) begin
-            is_write_hit <= 1;
-            cache[D_set][1][D_bo*32 +: 32] <= din;
-            cache[D_set][1][`DIRTY_IDX] <= 1;
-            state <= `A;
-          end
-          else if (is_old_line_dirty)
-            state <= `C;
-          else 
-            state <= `D;
-        end
-        else if (mem_rw == `READ) begin
-          if (is_output_valid) 
-            state <= `A;
-          else if (is_old_line_dirty)
-            state <= `C;
-          else 
-            state <= `D;
+    
+    if(is_input_valid && mem_rw == `WRITE) begin
+      if(line0_matched) begin
+        // hit
+        is_write_hit <= 1;
+        // assume that cache is empty
+        cache[D_set][0][D_bo*32 +: 32] <= din;
+        cache[D_set][0][`DIRTY_IDX] <= 1;
+      end
+      else if(line1_matched) begin
+        // hit
+        is_write_hit <= 1;
+        // assume that cache is empty
+        cache[D_set][1][D_bo*32 +: 32] <= din;
+        cache[D_set][1][`DIRTY_IDX] <= 1;
+      end
+    end
+
+    if(is_input_valid && mem_rw == `READ) begin
+      if(line0_matched) begin
+        if(!line0_is_valid && is_data_mem_ready) begin
+          C_is_input_valid <= 1;
+          C_mem_read <= 1;
+          C_addr <= addr;
         end
       end
-    end
-    // STATE C
-    else if (state == `C) begin
-      C_is_input_valid <= 1;
-      C_mem_write <= 1;
-      C_addr <= {cache[D_set][old_line][`TAG_IDX:`TAG_IDX-24], D_set, 4'b0};
-      C_din <= cache[D_set][old_line][127:0];
-      if (is_data_mem_ready) begin
-        cache[D_set][old_line][`DIRTY_IDX] <= 0;
-        state <= `D;
+      else if(line1_matched) begin
+        if(!line1_is_valid && is_data_mem_ready) begin
+          C_is_input_valid <= 1;
+          C_mem_read <= 1;
+          C_addr <= addr;
+        end
       end
-      else  
-        state <= `C;
-    end
-    // STATE D
-    else if (state == `D) begin
-      C_is_input_valid <= 1;
-      C_mem_read <= 1;
-      C_addr <= addr;
-      if (M_is_output_valid) begin
-        cache[D_set][old_line][127:0] <= M_dout;
-        cache[D_set][old_line][`DIRTY_IDX] <= 0;
-        cache[D_set][old_line][`VALID_IDX] <= 1;
-        cache[D_set][old_line][`TAG_IDX:`TAG_IDX-24] <= D_tag;
-        state <= `B;
+      else begin
+        if(is_old_line_dirty && is_data_mem_ready) begin
+          C_is_input_valid <= 1;
+          C_mem_write <= 1;
+          C_addr <= {cache[D_set][old_line][`TAG_IDX:`TAG_IDX-24], D_set, 4'b0};
+          C_din <= cache[D_set][old_line][127:0];
+          cache[D_set][old_line][`DIRTY_IDX] <= 0;
+        end
+        else if(is_data_mem_ready) begin
+          C_is_input_valid <= 1;
+          C_mem_read <= 1;
+          C_addr <= addr;
+        end
       end
-      else
-        state <= `D;
     end
 
     if(is_input_valid && line0_is_valid && is_hit) begin
@@ -198,6 +166,7 @@ module Cache #(parameter LINE_SIZE = 16,
     end
   end
 
+
   always @(*) begin
     if (cache[D_set][0][`LRU_IDX] == `LRU_OLD) begin
       old_line = 0;
@@ -205,20 +174,25 @@ module Cache #(parameter LINE_SIZE = 16,
     else begin
       old_line = 1;
     end
-    dout = 0;
+
     is_read_hit = 0;
+    dout = 0;
+    
+    // Read
+    // Calculate set index and tag
     if(is_input_valid) begin
+      // Read
+      // line0 hit
       if (line0_matched && mem_rw == `READ) begin
         is_read_hit = 1;
         dout = cache[D_set][0][D_bo*32 +: 32];
       end
+      // line1 hit
       else if (line1_matched && mem_rw == `READ) begin
         is_read_hit = 1;
         dout = cache[D_set][1][D_bo*32 +: 32];
       end
     end
-
-    is_hit = is_write_hit || is_read_hit;
   end
 
 
