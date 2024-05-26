@@ -54,7 +54,7 @@ module Cache #(parameter LINE_SIZE = 16,
   reg matched_line;
   assign is_ready = is_data_mem_ready;
   assign is_output_valid = is_input_valid && ((line0_matched && line0_is_valid) || (line1_matched && line1_is_valid));
-  //assign matched_line = line1_matched; // line1 is not matched, line0 can be matched or not. if line0 matched, 0 is correct. if line0 is also not matched, don't care.  
+  assign matched_line = line0_matched ? 0 : 1;
   assign dout = cache[D_set][matched_line][D_bo*32 +: 32];
   //assign is_write_hit = is_output_valid && mem_rw == `WRITE;
   assign is_read_hit = is_output_valid && mem_rw == `READ;
@@ -76,9 +76,9 @@ module Cache #(parameter LINE_SIZE = 16,
   assign line0_is_valid = cache[D_set][0][`VALID_IDX];
   assign line1_is_valid = cache[D_set][1][`VALID_IDX];
 
-  reg old_line;
+  wire old_line;
   wire is_old_line_dirty;
-  //assign old_line = cache[D_set][0][`LRU_IDX] == `LRU_OLD ? 0 : 1;
+  assign old_line = cache[D_set][0][`LRU_IDX] == `LRU_OLD ? 0 : 1;
   assign is_old_line_dirty = cache[D_set][old_line][`DIRTY_IDX];
 
   reg C_is_input_valid;
@@ -179,9 +179,8 @@ module Cache #(parameter LINE_SIZE = 16,
       C_mem_write <= 1;
       C_addr <= {cache[D_set][old_line][`TAG_IDX:`TAG_IDX-24], D_set, 4'b0};
       C_din <= cache[D_set][old_line][127:0];
-      if (is_data_mem_ready) begin
+      if (is_data_mem_ready)
         state <= `E;
-      end
       else  
         state <= `C;
     end
@@ -190,9 +189,8 @@ module Cache #(parameter LINE_SIZE = 16,
       C_is_input_valid <= 1;
       C_mem_read <= 1;
       C_addr <= addr;
-      if (is_data_mem_ready) begin
+      if (is_data_mem_ready) 
         state <= `F;
-      end
       else
         state <= `D;
     end
@@ -230,26 +228,6 @@ module Cache #(parameter LINE_SIZE = 16,
     end
   end
 
-  always @(*) begin
-    if (cache[D_set][0][`LRU_IDX] == `LRU_OLD) begin
-      old_line = 0;
-    end
-    else begin
-      old_line = 1;
-    end
-
-    if(is_input_valid && line0_is_valid && line0_matched) begin
-      matched_line = 0;
-    end
-    else if(is_input_valid && line1_is_valid && line1_matched) begin
-      matched_line = 1;
-    end
-    else begin
-      matched_line = 0;
-    end
-    
-
-  end
 
 
   // Instantiate data memory
