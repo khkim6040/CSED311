@@ -310,6 +310,7 @@ module cpu(input reset,       // positive reset signal
     .is_halted(ID_is_halted)      // output
   );  
 
+  wire MEM_WB_write;
   HazardDetector hazard_detector(
     .clk(clk),  // input
     .reset(reset),  // input
@@ -335,7 +336,8 @@ module cpu(input reset,       // positive reset signal
     .IF_ID_nop_signal(IF_ID_nop_signal),  // output
     .ID_EX_nop_signal(ID_EX_nop_signal),  // output
     .EX_correct_next_pc(EX_correct_next_pc),  // output
-    .EX_PCSrc(EX_PCSrc)  // output
+    .EX_PCSrc(EX_PCSrc), // output
+    .MEM_WB_write(MEM_WB_write)  // output
   );
 
   // Update ID/EX pipeline registers here
@@ -392,6 +394,7 @@ module cpu(input reset,       // positive reset signal
     .WB_reg_rd(WB_reg_rd),
     .MEM_reg_write(MEM_reg_write),
     .WB_reg_write(WB_reg_write),
+    .WB_mem_to_reg(WB_mem_to_reg),
     .alu_src(EX_alu_src),
     .forwardA(forwardA),
     .forwardB(forwardB),
@@ -509,13 +512,15 @@ module cpu(input reset,       // positive reset signal
       reg_MEM_WB_PC <= 32'b0;
     end
     else begin
-      reg_MEM_WB_mem_to_reg <= MEM_mem_to_reg;
-      reg_MEM_WB_reg_write <= MEM_reg_write;
-      reg_MEM_WB_is_halted <= MEM_is_halted;
-      reg_MEM_WB_mem_to_reg_src_1 <= MEM_alu_out;
-      reg_MEM_WB_mem_to_reg_src_2 <= MEM_dmem_dout;
-      reg_MEM_WB_rd <= MEM_reg_rd;
-      reg_MEM_WB_PC <= MEM_PC;
+      if(MEM_WB_write) begin
+        reg_MEM_WB_mem_to_reg <= MEM_mem_to_reg;
+        reg_MEM_WB_reg_write <= MEM_reg_write;
+        reg_MEM_WB_is_halted <= MEM_is_halted;
+        reg_MEM_WB_mem_to_reg_src_1 <= MEM_alu_out;
+        reg_MEM_WB_mem_to_reg_src_2 <= MEM_dmem_dout;
+        reg_MEM_WB_rd <= MEM_reg_rd;
+        reg_MEM_WB_PC <= MEM_PC;
+      end
     end
   end
 

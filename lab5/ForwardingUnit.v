@@ -1,3 +1,5 @@
+`define MEM_TO_REG_LOAD 2'b01
+
 module ForwardingUnit(
     input [4:0] EX_rs1_index,
     input [4:0] EX_rs2_index,
@@ -6,6 +8,7 @@ module ForwardingUnit(
     input MEM_reg_write,
     input WB_reg_write,
     input alu_src,
+    input [1:0] WB_mem_to_reg,
     output reg [1:0] forwardA,
     output reg [1:0] forwardB,
     output reg [1:0] forwardC
@@ -29,7 +32,7 @@ module ForwardingUnit(
             forwardB = 0; // Register value
 
         
-        if(WB_reg_rd == EX_rs2_index) // lw -> sw
+        if((WB_mem_to_reg == `MEM_TO_REG_LOAD) && WB_reg_rd == EX_rs2_index) // lw -> sw
             forwardC = 2;
         else if (MEM_reg_rd == EX_rs2_index) // R-type -> sw
             forwardC = 1;

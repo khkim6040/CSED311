@@ -24,6 +24,10 @@ module DataMemory #(parameter MEM_DEPTH = 16384,
   // delay counter used to delay the memory accesses
   reg [31:0] delay_counter;
 
+  wire [BLOCK_SIZE * 8 - 1:0] test_w;
+  assign test_w = mem[32'h000002de];
+  wire [31:0]mem_addr_w;
+  assign mem_addr_w = _mem_addr;
   // Used to store the status of the previous memory request
   reg [31:0] _mem_addr;
   reg _mem_read;
