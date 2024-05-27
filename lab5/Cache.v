@@ -52,7 +52,7 @@ module Cache #(parameter LINE_SIZE = 16,
   reg is_write_hit;
   wire is_read_hit;
   reg matched_line;
-  assign is_ready = is_data_mem_ready || is_hit;
+  assign is_ready = is_data_mem_ready;
   assign is_output_valid = is_input_valid && ((line0_matched && line0_is_valid) || (line1_matched && line1_is_valid));
   //assign matched_line = line1_matched; // line1 is not matched, line0 can be matched or not. if line0 matched, 0 is correct. if line0 is also not matched, don't care.  
   assign dout = cache[D_set][matched_line][D_bo*32 +: 32];
