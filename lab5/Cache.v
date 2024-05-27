@@ -198,7 +198,7 @@ module Cache #(parameter LINE_SIZE = 16,
     end
     else if (state == `E) begin
       C_is_input_valid <= 1;
-      C_mem_read <= 1;
+      C_mem_write <= 1;
       if(is_data_mem_ready) begin
         cache[D_set][old_line][`DIRTY_IDX] <= 0;
         state <= `D;
