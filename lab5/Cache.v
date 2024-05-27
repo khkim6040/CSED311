@@ -45,7 +45,8 @@ module Cache #(parameter LINE_SIZE = 16,
     output is_ready,
     output is_output_valid,
     output [31:0] dout,
-    output is_hit);
+    output is_hit,
+    output reg [31:0] miss_count);
 
   wire is_data_mem_ready;
   reg is_write_hit;
@@ -110,6 +111,7 @@ module Cache #(parameter LINE_SIZE = 16,
         cache[i][1] <= {`LRU_OLD, 1'b0, 1'b0, 25'b0, 128'b0};
       end
       state <= `B;
+      miss_count <= 0;
     end
 
     is_write_hit <= 0;
@@ -146,18 +148,26 @@ module Cache #(parameter LINE_SIZE = 16,
             cache[D_set][1][`DIRTY_IDX] <= 1;
             state <= `A;
           end
-          else if (is_old_line_dirty)
+          else if (is_old_line_dirty) begin
             state <= `C;
-          else 
+            miss_count <= miss_count + 1;
+          end
+          else begin
             state <= `D;
+            miss_count <= miss_count + 1;
+          end
         end
         else if (mem_rw == `READ) begin
           if (is_output_valid) 
             state <= `A;
-          else if (is_old_line_dirty)
+          else if (is_old_line_dirty) begin
             state <= `C;
-          else 
+            miss_count <= miss_count + 1;
+          end
+          else begin
             state <= `D;
+            miss_count <= miss_count + 1;
+          end
         end
       end
       else 

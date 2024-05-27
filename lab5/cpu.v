@@ -12,6 +12,7 @@
 
 module cpu(input reset,       // positive reset signal
            input clk,         // clock signal
+           output reg [31:0] miss_count,
            output is_halted, // Whehther to finish simulation
            output [31:0]print_reg[0:31]); // Whehther to finish simulation
 
@@ -497,7 +498,8 @@ module cpu(input reset,       // positive reset signal
     .is_ready (MEM_is_ready),        // output
     .is_output_valid (MEM_is_output_valid),      // output
     .dout (MEM_dmem_dout),        // output
-    .is_hit (MEM_is_hit)
+    .is_hit (MEM_is_hit),
+    .miss_count(miss_count)
   );
 
   // Update MEM/WB pipeline registers here
