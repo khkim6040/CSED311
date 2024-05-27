@@ -7,7 +7,7 @@ module HazardDetector (
     input [4:0] rs1,
     input [4:0] EX_rd,
     input [4:0] MEM_rd,
-    input mem_read,
+    input EX_mem_read,
     input is_ecall,
     input [1:0] bcond,
     input [31:0] ID_PC,
@@ -66,7 +66,7 @@ module HazardDetector (
             MEM_WB_write = 0;
         end
         // Data Hazard: Load-use hazard
-        else if(mem_read && ((is_rs1_used && rs1 == EX_rd) || (is_rs2_used && rs2 == EX_rd))) begin
+        else if(EX_mem_read && ((is_rs1_used && rs1 == EX_rd) || (is_rs2_used && rs2 == EX_rd))) begin
             PC_write = 0;
             IF_ID_write = 0;
             ID_EX_nop_signal = 1;
@@ -100,7 +100,15 @@ module HazardDetector (
             EX_correct_next_pc = target_pc;
             EX_PCSrc = 1;
         end
-        
+        // // Cache Miss stall
+        // else if((MEM_mem_read && !(MEM_is_ready && MEM_is_output_valid && MEM_is_hit)) ||
+        //             (MEM_mem_write && !(MEM_is_ready && MEM_is_hit))) begin
+        //     PC_write = 0;
+        //     IF_ID_write = 0;
+        //     ID_EX_write = 0;
+        //     EX_MEM_write = 0;
+        //     MEM_WB_write = 0;
+        // end
         else begin
             PC_write = 1;
             IF_ID_write = 1;

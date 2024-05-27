@@ -319,7 +319,7 @@ module cpu(input reset,       // positive reset signal
     .rs1(ID_reg_rs1_mux_out),  // input
     .EX_rd(EX_reg_rd),   // input
     .MEM_rd(MEM_reg_rd),  // input
-    .mem_read(EX_mem_read),  // input
+    .EX_mem_read(EX_mem_read),  // input
     .is_ecall(ID_is_ecall),  // input
     .bcond(EX_bcond), // input
     .EX_PC(EX_PC),  // input

@@ -57,7 +57,7 @@ module Cache #(parameter LINE_SIZE = 16,
   assign matched_line = line0_matched ? 0 : 1;
   assign dout = cache[D_set][matched_line][D_bo*32 +: 32];
   //assign is_write_hit = is_output_valid && mem_rw == `WRITE;
-  assign is_read_hit = is_output_valid && mem_rw == `READ;
+  assign is_read_hit = (line0_matched || line1_matched) && mem_rw == `READ;
   assign is_hit = is_write_hit || is_read_hit;
 
   wire [`TAG_SIZE-1:0] D_tag;
@@ -110,7 +110,7 @@ module Cache #(parameter LINE_SIZE = 16,
         cache[i][0] <= {`LRU_NEW, 1'b0, 1'b0, 25'b0, 128'b0};
         cache[i][1] <= {`LRU_OLD, 1'b0, 1'b0, 25'b0, 128'b0};
       end
-      state <= `B;
+      state <= `A;
       miss_count <= 0;
     end
 
@@ -140,12 +140,16 @@ module Cache #(parameter LINE_SIZE = 16,
             is_write_hit <= 1;
             cache[D_set][0][D_bo*32 +: 32] <= din;
             cache[D_set][0][`DIRTY_IDX] <= 1;
+            cache[D_set][matched_line][`LRU_IDX] <= `LRU_NEW;
+            cache[D_set][1-matched_line][`LRU_IDX] <= `LRU_OLD;
             state <= `A;
           end
           else if(line1_matched) begin
             is_write_hit <= 1;
             cache[D_set][1][D_bo*32 +: 32] <= din;
             cache[D_set][1][`DIRTY_IDX] <= 1;
+            cache[D_set][matched_line][`LRU_IDX] <= `LRU_NEW;
+            cache[D_set][1-matched_line][`LRU_IDX] <= `LRU_OLD;
             state <= `A;
           end
           else if (is_old_line_dirty) begin
@@ -158,8 +162,11 @@ module Cache #(parameter LINE_SIZE = 16,
           end
         end
         else if (mem_rw == `READ) begin
-          if (is_output_valid) 
+          if (is_output_valid) begin
+            cache[D_set][matched_line][`LRU_IDX] <= `LRU_NEW;
+            cache[D_set][1-matched_line][`LRU_IDX] <= `LRU_OLD;
             state <= `A;
+          end
           else if (is_old_line_dirty) begin
             state <= `C;
             miss_count <= miss_count + 1;
@@ -218,14 +225,14 @@ module Cache #(parameter LINE_SIZE = 16,
         state <= `F;
     end
 
-    if(is_input_valid && line0_is_valid && is_hit) begin
-      cache[D_set][0][`LRU_IDX] <= `LRU_NEW;
-      cache[D_set][1][`LRU_IDX] <= `LRU_OLD;
-    end
-    else if(is_input_valid && line1_is_valid && is_hit) begin
-      cache[D_set][1][`LRU_IDX] <= `LRU_NEW;
-      cache[D_set][0][`LRU_IDX] <= `LRU_OLD;
-    end
+    // if(is_input_valid && line0_is_valid && is_hit) begin
+    //   cache[D_set][0][`LRU_IDX] <= `LRU_NEW;
+    //   cache[D_set][1][`LRU_IDX] <= `LRU_OLD;
+    // end
+    // else if(is_input_valid && line1_is_valid && is_hit) begin
+    //   cache[D_set][1][`LRU_IDX] <= `LRU_NEW;
+    //   cache[D_set][0][`LRU_IDX] <= `LRU_OLD;
+    // end
   end
 
 
