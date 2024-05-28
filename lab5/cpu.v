@@ -131,6 +131,7 @@ module cpu(input reset,       // positive reset signal
   wire MEM_is_ready; // output of dcache module
   wire MEM_is_output_valid; // output of dcache module
   wire MEM_is_hit; // output of dcache module
+  wire MEM_WB_write;
   // Input Wires Initialization
   assign MEM_alu_out = reg_EX_MEM_alu_out;
   assign MEM_dmem_din = reg_EX_MEM_dmem_din;
@@ -311,7 +312,6 @@ module cpu(input reset,       // positive reset signal
     .is_halted(ID_is_halted)      // output
   );  
 
-  wire MEM_WB_write;
   HazardDetector hazard_detector(
     .clk(clk),  // input
     .reset(reset),  // input
