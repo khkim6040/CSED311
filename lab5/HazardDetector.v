@@ -3,7 +3,7 @@
 module HazardDetector (
     input clk,
     input reset,
-    input [31:0] instruction,
+    input [31:0] ID_instruction,
     input [4:0] rs1,
     input [4:0] EX_rd,
     input [4:0] MEM_rd,
@@ -31,9 +31,9 @@ module HazardDetector (
 
     reg [4:0] rs2;
     reg [6:0] opcode;
-    assign opcode = instruction[6:0];
-    // assign rs1 = instruction[19:15];
-    assign rs2 = instruction[24:20];
+    assign opcode = ID_instruction[6:0];
+    // assign rs1 = ID_instruction[19:15];
+    assign rs2 = ID_instruction[24:20];
     // Arithmetic uses both rs1, rs2
     // Immediate uses only rs1    
     // Load uses only rs1
