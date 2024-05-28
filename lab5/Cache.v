@@ -33,8 +33,8 @@
 `define F 3'b101
 
 module Cache #(parameter LINE_SIZE = 16,
-               parameter NUM_SETS = 2,
-               parameter NUM_WAYS = 8) (
+               parameter NUM_SETS = 8,
+               parameter NUM_WAYS = 2) (
     input reset,
     input clk,
 
@@ -135,15 +135,15 @@ module Cache #(parameter LINE_SIZE = 16,
       C_addr <= 0;
       C_din <= 0;
 
-      // STATE A
-      if (state == `A) begin
-        if (is_input_valid)
-          state <= `B;
-        else
-          state <= `A;
-      end
+      // // STATE A
+      // if (state == `A) begin
+      //   if (is_input_valid)
+      //     state <= `B;
+      //   else
+      //     state <= `A;
+      // end
       // STATE B
-      else if (state == `B) begin
+      if (state == `B) begin
         if(is_input_valid) begin
           // Compare Tag
           if (mem_rw == `WRITE) begin
@@ -152,9 +152,11 @@ module Cache #(parameter LINE_SIZE = 16,
               cache[D_set][matched_line][`LRU_IDX:`LRU_IDX-`LRU_BITS+1] <= `LRU_NEW;
               cache[D_set][matched_line][D_bo*32 +: 32] <= din;
               cache[D_set][matched_line][`DIRTY_IDX] <= 1;
-              for(i=0; i<NUM_WAYS; i=i+1) begin
-                if((i[`WAY_BITS-1:0] != matched_line) && (lru[i] > `LRU_OLD))
-                  cache[D_set][i][`LRU_IDX:`LRU_IDX-`LRU_BITS+1] <= lru[i] - 1;
+              if(is_data_mem_ready) begin
+                for(i=0; i<NUM_WAYS; i=i+1) begin
+                  if((i[`WAY_BITS-1:0] != matched_line) && (lru[i] > `LRU_OLD))
+                    cache[D_set][i][`LRU_IDX:`LRU_IDX-`LRU_BITS+1] <= lru[i] - 1;
+                end
               end
               state <= `B;
             end
@@ -171,9 +173,11 @@ module Cache #(parameter LINE_SIZE = 16,
             if (is_read_hit && is_output_valid) begin
               // LRU setting
               cache[D_set][matched_line][`LRU_IDX:`LRU_IDX-`LRU_BITS+1] <= `LRU_NEW;
-              for(i=0; i<NUM_WAYS; i=i+1) begin
-                if((i[`WAY_BITS-1:0] != matched_line) && (lru[i] > `LRU_OLD))
-                  cache[D_set][i][`LRU_IDX:`LRU_IDX-`LRU_BITS+1] <= lru[i] - 1;
+              if(is_data_mem_ready) begin
+                for(i=0; i<NUM_WAYS; i=i+1) begin
+                  if((i[`WAY_BITS-1:0] != matched_line) && (lru[i] > `LRU_OLD))
+                    cache[D_set][i][`LRU_IDX:`LRU_IDX-`LRU_BITS+1] <= lru[i] - 1;
+                end
               end
               state <= `B;
             end
