@@ -32,8 +32,8 @@
 `define E 3'b100
 
 module Cache #(parameter LINE_SIZE = 16,
-               parameter NUM_SETS = 16,
-               parameter NUM_WAYS = 1) (
+               parameter NUM_SETS = 8,
+               parameter NUM_WAYS = 2) (
     input reset,
     input clk,
 

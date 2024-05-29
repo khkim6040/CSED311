@@ -100,15 +100,6 @@ module HazardDetector (
             EX_correct_next_pc = target_pc;
             EX_PCSrc = 1;
         end
-        // // Cache Miss stall
-        // else if((MEM_mem_read && !(MEM_is_ready && MEM_is_output_valid && MEM_is_hit)) ||
-        //             (MEM_mem_write && !(MEM_is_ready && MEM_is_hit))) begin
-        //     PC_write = 0;
-        //     IF_ID_write = 0;
-        //     ID_EX_write = 0;
-        //     EX_MEM_write = 0;
-        //     MEM_WB_write = 0;
-        // end
         else begin
             PC_write = 1;
             IF_ID_write = 1;

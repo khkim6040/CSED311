@@ -116,7 +116,6 @@ module cpu(input reset,       // positive reset signal
   assign EX_PC = reg_ID_EX_PC;
   assign EX_jump_signal = reg_ID_EX_jump_signal;
 
-
   // MEM stage wires
   wire [31:0] MEM_dmem_dout; // output of DataMemory module
   wire [31:0] MEM_alu_out; // input of DataMemory module
@@ -240,8 +239,8 @@ module cpu(input reset,       // positive reset signal
     .clk(clk),
     .reset(reset),
     .pc(IF_PC),
-    .bcond(EX_bcond), // 확인 필요
-    .EX_correct_next_pc(EX_correct_next_pc), // 확인 필요
+    .bcond(EX_bcond), 
+    .EX_correct_next_pc(EX_correct_next_pc), 
     .EX_pc(EX_PC), // input
     .next_pc(IF_GShare_out) // output
   );
