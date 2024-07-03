@@ -16,7 +16,7 @@ Labs: 35%\
 Homework: 8%
 
 ## References
-Computer Organization and Design RISC-V Edition: The Hardware Software Interface 2nd Edition by David A. Patterson  & John L. Hennessy, Morgan Kaufamann, 2020
+Computer Organization and Design RISC-V Edition: The Hardware Software Interface 2nd Edition by David A. Patterson  & John L. Hennessy, Morgan Kaufamann, 2020\
 Computer Systems: A Programmer's Perspective by Randal E. Bryandt & David R. O'Hallaron (2nd Edition)
 
 ## Lecture Schedule
